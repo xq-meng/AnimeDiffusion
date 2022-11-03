@@ -168,7 +168,6 @@ class UNet(nn.Module):
             nn.Conv2d(tchi, self.channel_out, kernel_size=1)
         )
 
-
     def forward(self, x, t=None):
         t_emb = utils.time_embedding(t, self.channel_base) if t is not None else None
         ht = []

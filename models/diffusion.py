@@ -5,7 +5,7 @@ from models.unet import UNet
 import utils
 
 
-class GaussianDiffusion(utils.Module):
+class GaussianDiffusion:
     
     def __init__(
         self,
@@ -39,20 +39,17 @@ class GaussianDiffusion(utils.Module):
         # loss function
         self.loss_fn = F.mse_loss
 
-
-    def forward(self, x, t):
+    def train(self, x, t):
         """
         :param[in]  x   torch.Tensor    [batch_size x channel x height x weight]
         :param[in]  t   torch.Tensor    [batch_size]
         """
         assert x.shape[0] == t.shape[0]
-        
         # noise
         noise = torch.randn_like(x)
-
         # q sampling
         gammas_t = utils.extract(self.gammas, t, x_shape=x.shape)
         x_noisy = torch.sqrt(gammas_t) * x + torch.sqrt(1 - gammas_t) * noise
-
-
-        return 0
+        # noise prediction
+        noise_tilde = self.denoise_fn(x_noisy, t)
+        return self.loss_fn(noise, noise_tilde)

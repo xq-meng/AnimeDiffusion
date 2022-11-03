@@ -7,5 +7,3 @@ if __name__ == '__main__':
         config = json.load(f)
     
     net = GaussianDiffusion(config['model'])
-    x = torch.randint(0, 255, (64, 64))
-    net(x)

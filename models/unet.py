@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import utils
 
 
 class SampleBlock(nn.Module):
@@ -23,26 +23,36 @@ class SampleBlock(nn.Module):
         return self.sampling(x)
 
 
-class ResidualBlock(nn.Module):
+class ResidualBlock(utils.Module):
 
     def __init__(
         self,
         channel_in,
-        channel_out=None,
+        channel_out,
+        time_channel=None,
         dropout=0
     ):
         super().__init__()
 
         # member variables
         self.channel_base = channel_in
-        self.channel_out = channel_out or channel_in
+        self.channel_out = channel_out 
 
         # layer definition
-        self.conv = nn.Sequential(
+        self.time_emb = nn.Sequential(
+            nn.SiLU(),
+            nn.Linear(time_channel, self.channel_out)
+        ) if time_channel is not None else None
+        self.conv1 = nn.Sequential(
             nn.GroupNorm(32, self.channel_base),
             nn.SiLU(),
-            nn.Dropout(p=dropout),
             nn.Conv2d(self.channel_base, self.channel_out, kernel_size=3, padding=1)
+        )
+        self.conv2 = nn.Sequential(
+            nn.GroupNorm(32, self.channel_out),
+            nn.SiLU(),
+            nn.Dropout(p=dropout),
+            nn.Conv2d(self.channel_out, self.channel_out, kernel_size=3, padding=1)
         )
 
         # skip connection
@@ -51,8 +61,15 @@ class ResidualBlock(nn.Module):
         else:
             self.skip_connection = nn.Conv2d(self.channel_base, self.channel_out, kernel_size=1)
 
-    def forward(self, x):
-        h = self.conv(x)
+    def forward(self, x, t=None):
+        '''
+        'x' [batch_size, x_channels, height, width]
+        't' [bathc_size, t_embedding]
+        '''
+        h = self.conv1(x)
+        if t is not None and self.time_emb is not None:
+            h += self.time_emb(t)[:, :, None, None]
+        h = self.conv2(h)
         return self.skip_connection(x) + h
 
 
@@ -86,7 +103,7 @@ class UNet(nn.Module):
         tcho = self.channel_base
 
         # input block 
-        self.input = nn.Sequential(
+        self.input = utils.Sequential(
             nn.Conv2d(tchi, tcho, kernel_size=1)
         )
 
@@ -94,7 +111,7 @@ class UNet(nn.Module):
         tchi = tcho
         self.encoder_block = nn.ModuleList()
         for l in range(depth):
-            tlayer = nn.Sequential()
+            tlayer = utils.Sequential()
             if l != 0:
                 tlayer.add_module(
                     'encoder_dsp_{0}'.format(l), SampleBlock(sampling_type="down")
@@ -108,7 +125,7 @@ class UNet(nn.Module):
             tcho = tcho * 2
 
         # bottomneck
-        self.bottom_block = nn.Sequential()
+        self.bottom_block = utils.Sequential()
         self.bottom_block.add_module(
             'bottom_neck_dsp_0', SampleBlock(sampling_type="down")
         )
@@ -128,7 +145,7 @@ class UNet(nn.Module):
         tcho = tchi // 2
         self.decoder_block = nn.ModuleList()
         for l in range(depth):
-            tlayer = nn.Sequential()
+            tlayer = utils.Sequential()
             for _ in range(n_res_blocks):
                 tlayer.add_module(
                     'decoder_res_{0}_{1}'.format(l, _), ResidualBlock(tchi, tcho, dropout=dropout)
@@ -152,22 +169,16 @@ class UNet(nn.Module):
         )
 
 
-    def forward(self, x):
+    def forward(self, x, t=None):
+        t_emb = utils.time_embedding(t, self.channel_base) if t is not None else None
         ht = []
         h = self.input(x)
         for module in self.encoder_block:
-            h = module(h)
+            h = module(h, t_emb)
             ht.append(h)
-        h = self.bottom_block(h)
+        h = self.bottom_block(h, t_emb)
         for module in self.decoder_block:
             h = torch.cat([h, ht.pop()], dim=1)
-            h = module(h)
+            h = module(h, t_emb)
         h = h.type(x.dtype)
         return self.output(h)
-
-
-if __name__ == '__main__':
-    b, c, h = 3, 6, 64
-    model = UNet(image_size=h, channel_in=c)
-    x = torch.randn((b, c, h, h))
-    h = model(x)

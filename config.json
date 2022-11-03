@@ -1,0 +1,13 @@
+{
+    "model": {
+        "unet": {
+            "image_size": 64,
+            "channel_in": 3
+        },
+        "betas": {
+            "linear_start": 1e-6,
+            "linear_end": 1e-2,
+            "time_step": 1000
+        }
+    }
+}

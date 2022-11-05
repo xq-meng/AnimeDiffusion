@@ -77,7 +77,6 @@ class UNet(nn.Module):
 
     def __init__(
         self,
-        image_size,
         channel_in,
         channel_out=None,
         channel_base=64,
@@ -89,7 +88,6 @@ class UNet(nn.Module):
         super().__init__()
 
         # member variables
-        self.image_size = image_size
         self.channel_in = channel_in
         self.channel_out = channel_out or channel_in
         self.channel_base = channel_base

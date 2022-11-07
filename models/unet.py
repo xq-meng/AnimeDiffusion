@@ -19,7 +19,7 @@ class SampleBlock(nn.Module):
         else:
             self.sampling = nn.Identity()
 
-    def forward(self, x):
+    def forward(self, x, t=None):
         return self.sampling(x)
 
 
@@ -63,8 +63,8 @@ class ResidualBlock(utils.Module):
 
     def forward(self, x, t=None):
         '''
-        'x' [batch_size, x_channels, height, width]
-        't' [bathc_size, t_embedding]
+        :param[in]  x   torch.Tensor [batch_size, x_channels, height, width]
+        :param[in]  t   torch.Tensor [bathc_size, t_embedding]
         '''
         h = self.conv1(x)
         if t is not None and self.time_emb is not None:
@@ -82,7 +82,7 @@ class UNet(nn.Module):
         channel_base=64,
         n_res_blocks=2,
         dropout=0,
-        depth=4
+        channel_mult={1, 2, 4, 8}
     ):
 
         super().__init__()
@@ -94,82 +94,67 @@ class UNet(nn.Module):
         self.n_res_blocks = n_res_blocks
         self.dropout = dropout
 
-        # temporary variables
-        # tchi: temporary input channel
-        # tcho: temporary output channel
-        tchi = self.channel_in
-        tcho = self.channel_base
+        # time embedding
+        time_embedding_channel = channel_base * 4
+        self.time_embedding = nn.Sequential(
+            nn.Linear(self.channel_base, time_embedding_channel),
+            nn.SiLU(),
+            nn.Linear(time_embedding_channel, time_embedding_channel)
+        )
 
         # input block 
         self.input = utils.Sequential(
-            nn.Conv2d(tchi, tcho, kernel_size=1)
+            nn.Conv2d(self.channel_in, self.channel_base, kernel_size=1)
         )
+        channel_sequence = [channel_base]
 
+        # temporary variables
+        # ch: temporary input channel
+        ch = self.channel_base 
+        
         # encoder module list
-        tchi = tcho
         self.encoder_block = nn.ModuleList()
-        for l in range(depth):
-            tlayer = utils.Sequential()
-            if l != 0:
-                tlayer.add_module(
-                    'encoder_dsp_{0}'.format(l), SampleBlock(sampling_type="down")
-                )
+        for l, mult in enumerate(channel_mult):
             for _ in range(n_res_blocks):
-                tlayer.add_module(
-                    'encoder_res_{0}_{1}'.format(l, _), ResidualBlock(tchi, tcho, dropout=dropout)
-                )
-                tchi = tcho
-            self.encoder_block.append(tlayer)
-            tcho = tcho * 2
+                self.encoder_block.append(ResidualBlock(ch, mult * self.channel_base, time_channel=time_embedding_channel, dropout=dropout))
+                ch = mult * self.channel_base
+                channel_sequence.append(ch)
+            if l != len(channel_mult) - 1:
+                self.encoder_block.append(SampleBlock(sampling_type="down"))
+                channel_sequence.append(ch)
 
         # bottomneck
-        self.bottom_block = utils.Sequential()
-        self.bottom_block.add_module(
-            'bottom_neck_dsp_0', SampleBlock(sampling_type="down")
-        )
-        for _ in range(n_res_blocks):
-            self.bottom_block.add_module(
-                'bottom_neck_res_{0}'.format(_), ResidualBlock(tchi, tcho, dropout=dropout)
-            )
-            tchi = tcho
-        self.bottom_block.add_module(
-            'bottom_neck_usp_0', SampleBlock(sampling_type="up")
-        )
-        self.bottom_block.add_module(
-            'bottom_neck_usp_conv_0', nn.Conv2d(tchi, tchi // 2, kernel_size=3, padding=1)
+        self.bottom_block = utils.Sequential(
+            ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout),
+            ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout)
         )
 
         # decoder module list
-        tcho = tchi // 2
         self.decoder_block = nn.ModuleList()
-        for l in range(depth):
-            tlayer = utils.Sequential()
+        for l, mult in reversed(list(enumerate(channel_mult))):
             for _ in range(n_res_blocks):
-                tlayer.add_module(
-                    'decoder_res_{0}_{1}'.format(l, _), ResidualBlock(tchi, tcho, dropout=dropout)
+                self.decoder_block.append(ResidualBlock(ch + channel_sequence.pop(), mult * self.channel_base, time_channel=time_embedding_channel, dropout=dropout))
+                ch = mult * self.channel_base
+            if l > 0:
+                self.decoder_block.append(
+                    utils.Sequential(
+                        ResidualBlock(ch + channel_sequence.pop(), mult * self.channel_base, time_channel=time_embedding_channel, dropout=dropout),
+                        SampleBlock(sampling_type="up")
+                    )
                 )
-                tchi = tcho
-            if l != depth - 1:
-                tlayer.add_module(
-                    'decoder_usp_{0}'.format(l), SampleBlock(sampling_type="up")
-                )
-                tlayer.add_module(
-                    'decoder_usp_conv_{0}'.format(l), nn.Conv2d(tchi, tchi // 2, kernel_size=3, padding=1)
-                )
-            self.decoder_block.append(tlayer)
-            tcho = tcho // 2
+                ch = mult * self.channel_base
 
         # output block
         self.output = nn.Sequential(
             nn.GroupNorm(32, self.channel_base),
             nn.SiLU(),
-            nn.Conv2d(tchi, self.channel_out, kernel_size=1)
+            nn.Conv2d(ch, self.channel_out, kernel_size=1)
         )
 
     def forward(self, x, t=None):
-        t_emb = utils.time_embedding(t, self.channel_base) if t is not None else None
-        ht = []
-        h = self.input(x)
+        t_emb = self.time_embedding(utils.time_embedding(t, self.channel_base)) if t is not None else None
+        h = self.input(x, t)
+        ht = [h]
         for module in self.encoder_block:
             h = module(h, t_emb)
             ht.append(h)

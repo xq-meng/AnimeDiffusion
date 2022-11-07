@@ -1,11 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
 from models.unet import UNet
 import utils
 
 
-class GaussianDiffusion:
+class GaussianDiffusion(nn.Module):
     
     def __init__(
         self,
@@ -16,7 +17,7 @@ class GaussianDiffusion:
         # member variables
         unet_args = args['unet']
         self.denoise_fn = UNet(**unet_args)
-        self.time_steps = args['betas']['time_step']
+        self.time_steps = args['time_step']
 
         # parameters 
         scale = 1000 / self.time_steps
@@ -59,9 +60,10 @@ class GaussianDiffusion:
     
     def inference(self, x_t):
         batch_size = x_t.shape[0]
+        device = next(self.parameters()).device
         ret = []
-        for i in reversed(range(0, self.time_steps)):
-            x_t = self.p_sample(x_t=x_t, t=torch.full((batch_size, ), i, dtype=torch.long))
+        for i in tqdm(reversed(range(0, self.time_steps)), desc='Sampling time step', total=self.time_steps):
+            x_t = self.p_sample(x_t=x_t, t=torch.full((batch_size, ), i, device=device, dtype=torch.long))
             ret.append(x_t.cpu().numpy())
         return ret
 

@@ -1,13 +1,31 @@
 {
+    "dataset": {
+        "name": "CIFAR-10",
+        "path": "/Users/xqmeng/workspace/data/CIFAR-10/cifar-10-batches-py"
+    },
     "model": {
-        "time_step": 1000,
-        "unet": {
-            "channel_in": 1,
-            "channel_mult": [1, 2, 2]
+        "train": {
+            "batch_size": 32,
+            "epochs": 100,
+            "ema_decay": 0.999,
+            "learning_rate": 5e-4
         },
-        "betas": {
-            "linear_start": 1e-6,
-            "linear_end": 1e-2
-        }
+        "test": {
+            "batch_size": 32
+        },
+        "diffusion": {
+            "time_step": 1000,
+            "betas": {
+                "linear_start": 1e-6,
+                "linear_end": 1e-2
+            },
+            "unet": {
+                "channel_in": 3,
+                "channel_mult": [1, 2, 2]
+            }
+        },
+        "status_save_dir": "/Users/xqmeng/workspace/code/CLIPalette/out",
+        "log_save_dir": "/Users/xqmeng/workspace/code/CLIPalette/out",
+        "load_status": ""
     }
 }

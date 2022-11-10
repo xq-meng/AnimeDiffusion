@@ -15,8 +15,7 @@ class GaussianDiffusion(nn.Module):
         super().__init__()
         
         # member variables
-        unet_args = args['unet']
-        self.denoise_fn = UNet(**unet_args)
+        self.denoise_fn = UNet(**args['unet'])
         self.time_steps = args['time_step']
 
         # parameters 
@@ -57,7 +56,7 @@ class GaussianDiffusion(nn.Module):
         nonzero_mask = ((t != 0).float().view(-1, *([1] * (len(x_t.shape) - 1))))
         pred_x = posterior_mean + nonzero_mask * (0.5 * posterior_log_variance).exp() * noise
         return pred_x
-    
+
     def inference(self, x_t):
         batch_size = x_t.shape[0]
         device = next(self.parameters()).device
@@ -67,16 +66,21 @@ class GaussianDiffusion(nn.Module):
             ret.append(x_t.cpu().numpy())
         return ret
 
-    def train(self, x, t):
+    def train(self, x, t, x_cond=None):
         """
-        :param[in]  x   torch.Tensor    [batch_size x channel x height x weight]
-        :param[in]  t   torch.Tensor    [batch_size]
+        :param[in]  x       torch.Tensor    [batch_size x channel x height x weight]
+        :param[in]  t       torch.Tensor    [batch_size]
+        :param[in]  x_cond  torch.Tensor    [batch_size x _ x height x weight]
         """
         assert x.shape[0] == t.shape[0]
         # noise
         noise = torch.randn_like(x)
         # q sampling
         x_noisy = self.q_sample(x, t, noise=noise)
+        # add denoise condition
+        if x_cond is not None:
+            assert x.shape[0] == x_cond.shape[0] and x.shape[1] == x_cond.shape[1] and x.shape[2] == x_cond.shape[2]
+            x_noisy = torch.cat([x_noisy, x_cond], dim=1)
         # noise prediction
         noise_tilde = self.denoise_fn(x_noisy, t)
         return self.loss_fn(noise, noise_tilde)

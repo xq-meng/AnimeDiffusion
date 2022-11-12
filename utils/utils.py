@@ -43,6 +43,20 @@ def rgb2xyz(r, g, b):
     return x, y, z
 
 
+def xyz2rgb(x, y, z):
+    def gamma(t):
+        return 1.055 * math.pow(t, 0.41666667) - 0.055 if t > 0.0031308 else t * 12.92
+
+    rr = gamma( 3.2404542 * x - 1.5371385 * y - 0.4985314 * z)
+    gg = gamma(-0.9692660 * x + 1.8760108 * y + 0.0415560 * z)
+    bb = gamma( 0.0556434 * x - 0.2040259 * y + 1.0572252 * z)
+    r = min(max(round(rr), 255), 0)
+    g = min(max(round(gg), 255), 0)
+    b = min(max(round(bb), 255), 0)
+
+    return r, g, b
+
+
 def xyz2lab(x, y, z):
     def theta(t):
         return math.pow(t, 0.3333333) if t > 0.008856 else  7.787 * t + 0.1379310
@@ -63,6 +77,26 @@ def xyz2lab(x, y, z):
     return L, a, b
 
 
+def lab2xyz(l, a, b):
+    def theta(t):
+        return math.pow(t, 3) if t > 0.20689303 else (t - 0.1379310) / 7.787
+
+    x_n = 0.950456
+    y_n = 1.000000
+    z_n = 1.088754
+    fy = (l + 16.0) / 116
+    fx = fy + a / 500
+    fz = fy - b / 200
+    x = theta(fx)
+    y = theta(fy)
+    z = theta(fz)
+    x *= x_n
+    y *= y_n
+    z *= z_n
+
+    return x, y, z
+
+
 def rgb2lab(r: int, g: int, b: int):
     '''
     :param[in]  r, g, b int [0, 255]
@@ -71,3 +105,10 @@ def rgb2lab(r: int, g: int, b: int):
     L, a, b = xyz2lab(x, y, z)
 
     return L, a, b
+
+
+def lab2rgb(l, a, b):
+    x, y, z = lab2xyz(l, a, b)
+    r, g, b = xyz2rgb(x, y, z)
+
+    return r, g, b

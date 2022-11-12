@@ -2,6 +2,7 @@ import os
 import logging
 import torch
 from torch.utils.data import DataLoader
+import utils
 from models.diffusion import GaussianDiffusion
 
 
@@ -69,8 +70,9 @@ class Palette:
                     logging.info("Epoch = %d, Loss = %f", self.epoch, self.loss)
                 self.loss.backward()
                 self.optimizer.step()
+        self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
 
-    def inference(self, dataset):
+    def inference(self, dataset, output_dir=None):
         data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
 
         rets = []
@@ -78,6 +80,11 @@ class Palette:
             batch_size, _, h, w = images.shape
             x_cond = images[:, 1:, :, :]
             noise = torch.randn((batch_size, 1, h, w))
-            rets.append(self.diffusion_model.inference(noise, x_cond=x_cond))
+            image_lab = self.diffusion_model.inference(noise, x_cond=x_cond)
+            image_rgb = utils.Postprocess()(image_lab)
+            if output_dir is not None:
+                image_rgb.save(os.path.join(output_dir, str(step).zfill(5) + '.jpg'))
+            else:
+                rets.append(image_rgb)
 
         return rets

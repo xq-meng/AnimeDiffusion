@@ -2,7 +2,7 @@ import argparse
 import json
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
-import preprocess
+import utils
 from models.palette import Palette
 
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     # dataset
     transform = transforms.Compose([
-        preprocess.Preprocess()
+        utils.Preprocess()
     ])
     train_dataset = datasets.CIFAR10('./dataset/cifar_10', train=True, download=True, transform=transform)
 
@@ -31,6 +31,4 @@ if __name__ == '__main__':
 
     # inference
     test_dataset = datasets.CIFAR10('./dataset/cifar_10', train=False, download=False, transform=transform)
-    model.inference(test_dataset)
-
-    # save results
+    model.inference(test_dataset, './out/test_results')

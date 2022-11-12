@@ -4,7 +4,8 @@
             "batch_size": 32,
             "epochs": 100,
             "ema_decay": 0.999,
-            "learning_rate": 5e-4
+            "learning_rate": 5e-4,
+            "save_epochs": 20
         },
         "test": {
             "batch_size": 32
@@ -17,12 +18,16 @@
             },
             "unet": {
                 "channel_in": 3,
-                "channel_out": 1,
-                "channel_mult": [1, 2, 2]
+                "channel_out": 2,
+                "channel_mult": [1, 2, 2, 2]
             }
-        },
-        "status_save_dir": "./out/status",
-        "log_save_dir": "./out/log",
-        "load_status": ""
+        }
+    },
+    "directories": {
+        "log": "./out/log",
+        "dataset": "./dataset",
+        "status_save": "./out/status",
+        "status_load": "",
+        "test_result": "./out/test"
     }
 }

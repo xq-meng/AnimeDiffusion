@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import utils
@@ -23,12 +24,14 @@ if __name__ == '__main__':
     transform = transforms.Compose([
         utils.Preprocess()
     ])
-    train_dataset = datasets.CIFAR10('./dataset/cifar_10', train=True, download=True, transform=transform)
+    train_dataset = datasets.CIFAR10(os.path.join(config['directories']['dataset'], 'cifar_10'), train=True, download=True, transform=transform)
 
     # palette
     model = Palette(config['model'])
-    model.train(dataset=train_dataset)
+    if 'status_load' in config['directories'] and os.access(config['directories']['status_load'], os.R_OK):
+        model.load_status(config['directories']['status_load'])
+    model.train(dataset=train_dataset, status_save_dir=config['directories']['status_save'])
 
     # inference
-    test_dataset = datasets.CIFAR10('./dataset/cifar_10', train=False, download=False, transform=transform)
-    model.inference(test_dataset, './out/test_results')
+    test_dataset = datasets.CIFAR10(os.path.join(config['directories']['dataset'], 'cifar_10'), train=False, download=False, transform=transform)
+    model.inference(test_dataset, config['directories']['test_result'])

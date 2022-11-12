@@ -17,6 +17,7 @@ class Palette:
         self.train_epochs = args['train']['epochs']
         self.batch_size = args['train']['batch_size']
         self.ema_decay = args['train']['ema_decay']
+        self.save_epochs = args['train']['save_epochs']
         learning_rate = args['train']['learning_rate'] if 'learning_rate' in args['train'] else 5e-4
 
         # gaussian diffusion
@@ -26,9 +27,6 @@ class Palette:
 
         # logging
         logging.basicConfig(format='[%(asctime)s][%(levelname)s] %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
-
-        # file path
-        self.status_save_dir = args['status_save_dir']
 
     def save_status(self, path_to_status):
         torch.save({
@@ -48,14 +46,14 @@ class Palette:
         logging.info('Current epoch : %d', self.epoch)
         logging.info('Current loss : %f', self.loss)
 
-    def train(self, dataset):
+    def train(self, dataset, status_save_dir=None):
         data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
         while self.epoch < self.train_epochs:
             self.epoch += 1
             # save status
-            if self.epoch > 0 and self.epoch % 20 == 0:
-                self.save_status(os.path.join(self.status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
+            if status_save_dir is not None and self.epoch > 0 and self.epoch % self.save_epochs == 0:
+                self.save_status(os.path.join(status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
             # train step
             for step, (images, _) in enumerate(data_loader):
                 self.optimizer.zero_grad()

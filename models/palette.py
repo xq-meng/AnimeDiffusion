@@ -60,8 +60,10 @@ class Palette:
             for step, (images, _) in enumerate(data_loader):
                 self.optimizer.zero_grad()
                 batch_size = images.shape[0]
-                x = images[:, :1, :, :]
-                x_cond = images[:, 1:, :, :]
+                # prediction: 2nd, 3rd channel
+                x = images[:, 1:, :, :]
+                # condition: 1st channel
+                x_cond = images[:, :1, :, :]
                 x = x.to(self.device)
                 x_cond = x_cond.to(self.device)
                 t = torch.randint(0, self.diffusion_model.time_steps, (batch_size, ), device=self.device).long()
@@ -78,8 +80,8 @@ class Palette:
         rets = []
         for step, (images, _) in enumerate(data_loader):
             batch_size, _, h, w = images.shape
-            x_cond = images[:, 1:, :, :]
-            noise = torch.randn((batch_size, 1, h, w))
+            x_cond = images[:, :1, :, :]
+            noise = torch.randn((batch_size, 2, h, w))
             image_lab = self.diffusion_model.inference(noise, x_cond=x_cond)
             image_rgb = utils.Postprocess()(image_lab)
             if output_dir is not None:

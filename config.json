@@ -1,6 +1,5 @@
 {
     "dataset": {
-        "name": "CIFAR-10",
         "path": "/Users/xqmeng/workspace/data/CIFAR-10/cifar-10-batches-py"
     },
     "model": {
@@ -21,6 +20,7 @@
             },
             "unet": {
                 "channel_in": 3,
+                "channel_out": 1,
                 "channel_mult": [1, 2, 2]
             }
         },

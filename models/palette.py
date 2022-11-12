@@ -1,7 +1,7 @@
 import os
 import logging
 import torch
-from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
 from models.diffusion import GaussianDiffusion
 
 
@@ -29,9 +29,6 @@ class Palette:
         # file path
         self.status_save_dir = args['status_save_dir']
 
-    def load_data(self, dataset):
-        self.dataset = dataset
-
     def save_status(self, path_to_status):
         torch.save({
             'epoch': self.epoch,
@@ -50,10 +47,8 @@ class Palette:
         logging.info('Current epoch : %d', self.epoch)
         logging.info('Current loss : %f', self.loss)
 
-    def train(self):
-        if self.dataset is None:
-            logging.error('No dataset.')
-        data_loader = torch.utils.data.DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)
+    def train(self, dataset):
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
 
         while self.epoch < self.train_epochs:
             self.epoch += 1
@@ -64,10 +59,25 @@ class Palette:
             for step, (images, _) in enumerate(data_loader):
                 self.optimizer.zero_grad()
                 batch_size = images.shape[0]
-                images = images.to(self.device)
+                x = images[:, :1, :, :]
+                x_cond = images[:, 1:, :, :]
+                x = x.to(self.device)
+                x_cond = x_cond.to(self.device)
                 t = torch.randint(0, self.diffusion_model.time_steps, (batch_size, ), device=self.device).long()
-                self.loss = self.diffusion_model.train(images, t)
+                self.loss = self.diffusion_model.train(x=x, t=t, x_cond=x_cond)
                 if step % 200 == 0:
                     logging.info("Epoch = %d, Loss = %f", self.epoch, self.loss)
                 self.loss.backward()
                 self.optimizer.step()
+
+    def inference(self, dataset):
+        data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+
+        rets = []
+        for step, (images, _) in enumerate(data_loader):
+            batch_size, _, h, w = images.shape
+            x_cond = images[:, 1:, :, :]
+            noise = torch.randn((batch_size, 1, h, w))
+            rets.append(self.diffusion_model.inference(noise, x_cond=x_cond))
+
+        return rets

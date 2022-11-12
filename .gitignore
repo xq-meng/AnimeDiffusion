@@ -135,3 +135,6 @@ dmypy.json
 
 # Jetbrain
 .idea/
+
+# datasets
+dataset/

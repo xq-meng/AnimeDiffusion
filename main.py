@@ -1,5 +1,8 @@
 import argparse
 import json
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+import preprocess
 from models.palette import Palette
 
 
@@ -16,4 +19,18 @@ if __name__ == '__main__':
     except PermissionError:
         print("Unable to access: {}".format(args.config))
 
+    # dataset
+    transform = transforms.Compose([
+        preprocess.Preprocess()
+    ])
+    train_dataset = datasets.CIFAR10('./dataset/cifar_10', train=True, download=True, transform=transform)
+
+    # palette
     model = Palette(config['model'])
+    model.train(dataset=train_dataset)
+
+    # inference
+    test_dataset = datasets.CIFAR10('./dataset/cifar_10', train=False, download=False, transform=transform)
+    model.inference(test_dataset)
+
+    # save results

@@ -1,3 +1,4 @@
+import os
 import torch
 import math
 
@@ -24,6 +25,14 @@ def extract(a, t, x_shape):
     out = a.to(t.device).gather(0, t).float()
     out = out.reshape(batch_size, *((1,) * (len(x_shape) - 1)))
     return out
+
+
+def mkdir(dir):
+    if os.path.exists(dir):
+        return os.path.isdir(dir)
+    else:
+        os.makedirs(dir)
+    return True
 
 
 def rgb2xyz(r, g, b):

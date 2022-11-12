@@ -1,14 +1,14 @@
 {
     "model": {
         "train": {
-            "batch_size": 32,
+            "batch_size": 64,
             "epochs": 100,
             "ema_decay": 0.999,
             "learning_rate": 5e-4,
             "save_epochs": 20
         },
         "test": {
-            "batch_size": 32
+            "batch_size": 64
         },
         "diffusion": {
             "time_step": 1000,
@@ -24,7 +24,6 @@
         }
     },
     "directories": {
-        "log": "./out/log",
         "dataset": "./dataset",
         "status_save": "./out/status",
         "status_load": "",

@@ -138,3 +138,6 @@ dmypy.json
 
 # datasets
 dataset/
+
+# output
+out/

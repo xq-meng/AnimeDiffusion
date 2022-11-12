@@ -1,7 +1,4 @@
 {
-    "dataset": {
-        "path": "/Users/xqmeng/workspace/data/CIFAR-10/cifar-10-batches-py"
-    },
     "model": {
         "train": {
             "batch_size": 32,
@@ -24,8 +21,8 @@
                 "channel_mult": [1, 2, 2]
             }
         },
-        "status_save_dir": "/Users/xqmeng/workspace/code/CLIPalette/out",
-        "log_save_dir": "/Users/xqmeng/workspace/code/CLIPalette/out",
+        "status_save_dir": "./out",
+        "log_save_dir": "./out",
         "load_status": ""
     }
 }

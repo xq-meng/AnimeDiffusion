@@ -76,7 +76,8 @@ class Palette:
             # update epoch
             self.epoch += 1
         # save final status
-        self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
+        if status_save_dir is not None:
+            self.save_status(os.path.join(status_save_dir, 'trained.pkl'))
 
     def inference(self, dataset, output_dir=None):
         data_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
@@ -86,7 +87,8 @@ class Palette:
             batch_size, _, h, w = images.shape
             x_cond = images[:, :1, :, :]
             noise = torch.randn((batch_size, 2, h, w))
-            image_lab = self.diffusion_model.inference(noise, x_cond=x_cond)
+            image_ab = self.diffusion_model.inference(noise, x_cond=x_cond)
+            image_lab = torch.cat([x_cond, image_ab], dim=1)
             image_rgb = utils.Postprocess()(image_lab)
             if output_dir is not None:
                 image_rgb.save(os.path.join(output_dir, str(step).zfill(5) + '.jpg'))

@@ -63,9 +63,9 @@ class GaussianDiffusion(nn.Module):
         batch_size = x_t.shape[0]
         device = next(self.parameters()).device
         ret = []
-        for i in tqdm(reversed(range(0, self.time_steps)), desc='Sampling time step', total=self.time_steps):
+        for i in reversed(range(0, self.time_steps)):
             x_t = self.p_sample(x_t=x_t, t=torch.full((batch_size, ), i, device=device, dtype=torch.long), x_cond=x_cond)
-            ret.append(x_t.cpu().numpy())
+            ret.append(x_t.cpu())
         return ret
 
     def train(self, x, t, x_cond=None):

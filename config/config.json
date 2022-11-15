@@ -1,14 +1,17 @@
 {
+    "train": {
+        "epochs": 50
+    },
+    "test": {
+        "output_dir": "./out/result"
+    },
     "model": {
-        "train": {
-            "batch_size": 128,
-            "epochs": 100,
-            "ema_decay": 0.999,
-            "learning_rate": 5e-4,
-            "save_epochs": 20
+        "optimizer": {
+            "name": "Adam",
+            "learning_rate": 5e-4
         },
-        "test": {
-            "batch_size": 1
+        "ema": {
+            "decay": 0.999
         },
         "diffusion": {
             "time_step": 1000,
@@ -21,12 +24,39 @@
                 "channel_out": 2,
                 "channel_mult": [1, 2, 2, 2]
             }
+        },
+        "status": {
+            "save_epochs": 20,
+            "save_dir": "./out/status",
+            "load_path": ""
         }
     },
-    "directories": {
-        "dataset": "./dataset",
-        "status_save": "/output/status",
-        "status_load": "",
-        "test_result": "/output/test"
+    "dataset": {
+        "train": {
+            "name": "CIFAR-10",
+            "path": "./dataset/CIFAR-10",
+            "dataloader": {
+                "batch_size": 128,
+                "num_workers": 2,
+                "shuffle": true,
+                "pin_memory": true,
+                "drop_last": true
+            }
+        },
+        "test": {
+            "name": "CIFAR-10",
+            "path": "./dataset/CIFAR-10",
+            "dataloader": {
+                "batch_size": 1,
+                "num_workers": 0,
+                "shuffle": false,
+                "pin_memory": true,
+                "drop_last": false
+            }
+        }
+    },
+    "logging": {
+        "console": true,
+        "logfile": "./out/log/clipalette.log"
     }
 }

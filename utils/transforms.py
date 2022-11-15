@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import utils
-from torchvision import transforms
 from PIL import Image
 
 

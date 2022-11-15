@@ -1,4 +1,6 @@
 import torch
+import numpy as np
+from PIL import Image
 import math
 
 
@@ -112,3 +114,14 @@ def lab2rgb(l, a, b):
     r, g, b = xyz2rgb(x, y, z)
 
     return r, g, b
+
+
+def tensor2PIL(tsr: torch.Tensor):
+    arr = tsr.detach().cpu().numpy()
+    arr = np.around((arr + 1) * 255 / 2).astype('int64')
+    return Image.fromarray(arr)
+
+
+def is_image(filename: str):
+    IMG_EXTENSIONS = ['.jpg', '.JPG', '.jpeg', '.JPEG', '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP']
+    return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)

@@ -1,14 +1,17 @@
 {
+    "train": {
+        "epochs": 50
+    },
+    "test": {
+        "output_dir": "/output/result"
+    },
     "model": {
-        "train": {
-            "batch_size": 128,
-            "epochs": 100,
-            "ema_decay": 0.999,
-            "learning_rate": 5e-4,
-            "save_epochs": 20
+        "optimizer": {
+            "name": "Adam",
+            "learning_rate": 5e-4
         },
-        "test": {
-            "batch_size": 1
+        "ema": {
+            "decay": 0.999
         },
         "diffusion": {
             "time_step": 1000,
@@ -17,16 +20,49 @@
                 "linear_end": 1e-2
             },
             "unet": {
-                "channel_in": 3,
-                "channel_out": 2,
+                "channel_in": 4,
+                "channel_out": 3,
                 "channel_mult": [1, 2, 2, 2]
+            }
+        },
+        "status": {
+            "save_epochs": 20,
+            "save_dir": "/output/status",
+            "load_path": ""
+        }
+    },
+    "dataset": {
+        "train": {
+            "name": "anime",
+            "path": {
+                "reference_path": "/data/xqmeng/Anime/Anime/train/reference",
+                "condition_path": "/data/xqmeng/Anime/Anime/train/condition"
+            },
+            "dataloader": {
+                "batch_size": 64,
+                "num_workers": 2,
+                "shuffle": true,
+                "pin_memory": true,
+                "drop_last": true
+            }
+        },
+        "test": {
+            "name": "anime",
+            "path": {
+                "reference_path": "/data/xqmeng/Anime/Anime/test/reference",
+                "condition_path": "/data/xqmeng/Anime/Anime/test/condition"
+            },
+            "dataloader": {
+                "batch_size": 1,
+                "num_workers": 0,
+                "shuffle": false,
+                "pin_memory": true,
+                "drop_last": false
             }
         }
     },
-    "directories": {
-        "dataset": "./dataset",
-        "status_save": "/output/status",
-        "status_load": "",
-        "test_result": "/output/test"
+    "logging": {
+        "console": true,
+        "logfile": "/output/log/clipalette.log"
     }
 }

@@ -1,10 +1,10 @@
 import argparse
 import json
 import os
-from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import utils
 from models.palette import Palette
+import datasets
 
 
 if __name__ == '__main__':
@@ -26,12 +26,9 @@ if __name__ == '__main__':
     logger = utils.Logger(name='base_logger', **config['logging'])
 
     # dataset
-    transform = transforms.Compose([
-        utils.Preprocess()
-    ])
-    train_dataset = datasets.CIFAR10(config['dataset']['train']['path'], train=True, download=True, transform=transform)
+    train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'])
     train_data_loader = DataLoader(dataset=train_dataset ,**config['dataset']['train']['dataloader'])
-    test_dataset = datasets.CIFAR10(config['dataset']['test']['path'], train=False, download=True, transform=transform)
+    test_dataset = datasets.ColorizationDataset(**config['dataset']['test']['path'])
     test_data_loader = DataLoader(dataset=test_dataset, **config['dataset']['test']['dataloader'])
 
     # palette

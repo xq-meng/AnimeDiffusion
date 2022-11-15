@@ -20,8 +20,8 @@
                 "linear_end": 1e-2
             },
             "unet": {
-                "channel_in": 3,
-                "channel_out": 2,
+                "channel_in": 4,
+                "channel_out": 3,
                 "channel_mult": [1, 2, 2, 2]
             }
         },
@@ -33,10 +33,13 @@
     },
     "dataset": {
         "train": {
-            "name": "CIFAR-10",
-            "path": "./dataset/CIFAR-10",
+            "name": "anime",
+            "path": {
+                "reference_path": "/Users/xqmeng/workspace/data/Anime/train/reference",
+                "condition_path": "/Users/xqmeng/workspace/data/Anime/train/condition"
+            },
             "dataloader": {
-                "batch_size": 128,
+                "batch_size": 4,
                 "num_workers": 2,
                 "shuffle": true,
                 "pin_memory": true,
@@ -44,8 +47,11 @@
             }
         },
         "test": {
-            "name": "CIFAR-10",
-            "path": "./dataset/CIFAR-10",
+            "name": "anime",
+            "path": {
+                "reference_path": "/Users/xqmeng/workspace/data/Anime/test/reference",
+                "condition_path": "/Users/xqmeng/workspace/data/Anime/test/condition"
+            },
             "dataloader": {
                 "batch_size": 1,
                 "num_workers": 0,

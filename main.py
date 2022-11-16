@@ -1,7 +1,8 @@
+import os
 import argparse
 import json
-import os
 from torch.utils.data import DataLoader
+from PIL import Image
 import utils
 from models.palette import Palette
 import datasets
@@ -31,9 +32,19 @@ if __name__ == '__main__':
     test_dataset = datasets.ColorizationDataset(**config['dataset']['test']['path'])
     test_data_loader = DataLoader(dataset=test_dataset, **config['dataset']['test']['dataloader'])
 
+    # validation
+    validation = None
+    if 'validation' in config:
+        validation = {}
+        val_img = Image.open(config['validation']['image_path'])
+        validation['condition'] = utils.PIL2tensor(val_img)
+        validation['postfix'] = os.path.splitext(config['validation']['image_path'])[-1]
+        validation['output_dir'] = config['validation']['output_dir']
+        utils.mkdir(validation['output_dir'])
+
     # palette
     model = Palette(config['model'], logger=logger)
-    model.train(train_epochs=config['train']['epochs'], data_loader=train_data_loader)
+    model.train(train_epochs=config['train']['epochs'], data_loader=train_data_loader, validation=validation)
 
     # inference
     utils.mkdir(config['test']['output_dir'])

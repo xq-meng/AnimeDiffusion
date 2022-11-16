@@ -23,6 +23,28 @@ class SampleBlock(nn.Module):
         return self.sampling(x)
 
 
+class AttentionBlock(utils.Module):
+    def __init__(
+        self,
+        channels,
+        num_heads=1
+    ):
+        super().__init__()
+        self.channels = channels
+        self.num_heads = num_heads
+        self.attention = nn.Sequential(
+            nn.GroupNorm(32, self.channels),
+            nn.Conv1d(self.channels, self.channels * 3, 1),
+            utils.QKVAttention(self.num_heads)
+        )
+
+    def forward(self, x, t=None):
+        b, c, *spatial = x.shape
+        x = x.reshape(b, c, -1)
+        h = self.attention(x)
+        return (x + h).reshape(b, c, *spatial)
+
+
 class ResidualBlock(utils.Module):
 
     def __init__(
@@ -36,7 +58,7 @@ class ResidualBlock(utils.Module):
 
         # member variables
         self.channel_base = channel_in
-        self.channel_out = channel_out 
+        self.channel_out = channel_out
 
         # layer definition
         self.time_emb = nn.Sequential(
@@ -82,7 +104,8 @@ class UNet(nn.Module):
         channel_base=64,
         n_res_blocks=2,
         dropout=0,
-        channel_mult={1, 2, 4, 8}
+        channel_mult={1, 2, 4, 8},
+        attention_head=4
     ):
 
         super().__init__()
@@ -102,7 +125,7 @@ class UNet(nn.Module):
             nn.Linear(time_embedding_channel, time_embedding_channel)
         )
 
-        # input block 
+        # input block
         self.input = utils.Sequential(
             nn.Conv2d(self.channel_in, self.channel_base, kernel_size=1)
         )
@@ -110,8 +133,8 @@ class UNet(nn.Module):
 
         # temporary variables
         # ch: temporary input channel
-        ch = self.channel_base 
-        
+        ch = self.channel_base
+
         # encoder module list
         self.encoder_block = nn.ModuleList()
         for l, mult in enumerate(channel_mult):
@@ -126,6 +149,7 @@ class UNet(nn.Module):
         # bottomneck
         self.bottom_block = utils.Sequential(
             ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout),
+            AttentionBlock(ch, attention_head),
             ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout)
         )
 

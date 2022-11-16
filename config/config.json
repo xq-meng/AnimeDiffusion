@@ -1,14 +1,20 @@
 {
     "train": {
-        "epochs": 0
+        "epochs": 10
     },
     "test": {
         "output_dir": "./out/result"
     },
+    "validation": {
+        "image_path": "/Users/xqmeng/workspace/data/Anime/test/condition/1.jpg",
+        "output_dir": "./out/validation"
+    },
     "model": {
         "optimizer": {
             "name": "Adam",
-            "learning_rate": 5e-4
+            "learning_rate": 5e-4,
+            "beta1": 0.5,
+            "beta2": 0.999
         },
         "ema": {
             "decay": 0.999
@@ -22,7 +28,8 @@
             "unet": {
                 "channel_in": 4,
                 "channel_out": 3,
-                "channel_mult": [1, 2, 2, 2]
+                "channel_mult": [1, 2, 2, 2],
+                "attention_head": 4
             }
         },
         "status": {

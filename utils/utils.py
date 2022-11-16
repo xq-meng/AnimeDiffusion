@@ -115,7 +115,19 @@ def tensor2PIL(tsr: torch.Tensor):
     tsr = tsr.detach().cpu()
     tsr = (tsr + 1) / 2
     tf = transforms.Compose([transforms.ToPILImage()])
-    return tf(tsr)
+    assert len(tsr.shape) > 1 and len(str.shape) <= 4
+    if len(tsr.shape) < 4:
+        return tf(tsr)
+    else:
+        ret = []
+        for c in range(tsr.shape[0]):
+            ret.append(tf(tsr[c]))
+        return ret
+
+
+def PIL2tensor(img):
+    tsr = transforms.PILToTensor()(img)
+    return tsr.unsqueeze(dim=0)
 
 
 def is_image(filename: str):

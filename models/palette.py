@@ -15,11 +15,14 @@ class Palette:
         self.diffusion_model = GaussianDiffusion(args=args['diffusion'])
         self.diffusion_model.to(device=self.device)
         # optimizer
-        learning_rate = args['optimizer']['learning_rate'] if 'learning_rate' in args['optimizer'] else 5e-4
+        opt_learning_rate = args['optimizer']['learning_rate'] if 'learning_rate' in args['optimizer'] else 5e-4
+        opt_beta1 = args['optimizer']['beta1'] if 'beta1' in args['optimizer'] else 0.9
+        opt_beta2 = args['optimizer']['beta2'] if 'beta2' in args['optimizer'] else 0.999
+
         if args['optimizer']['name'] == 'SGD':
-            self.optimizer = torch.optim.SGD(self.diffusion_model.parameters(), lr=learning_rate)
+            self.optimizer = torch.optim.SGD(self.diffusion_model.parameters(), lr=opt_learning_rate)
         else:
-            self.optimizer = torch.optim.Adam(self.diffusion_model.parameters(), lr=learning_rate)
+            self.optimizer = torch.optim.Adam(self.diffusion_model.parameters(), lr=opt_learning_rate, betas=(opt_beta1, opt_beta2))
         # ema
         self.ema_decay = min(max(args['ema']['decay'], 0), 1)
         self.ema = utils.ema(self.diffusion_model.denoise_fn, self.ema_decay)
@@ -54,11 +57,8 @@ class Palette:
         self._logger.info('Current epoch : %d', self.epoch)
         self._logger.info('Current loss : %f', self.loss)
 
-    def train(self, train_epochs, data_loader):
+    def train(self, train_epochs, data_loader, validation=None):
         while self.epoch < train_epochs:
-            # save status
-            if self.status_save_dir is not None and self.epoch % self.status_save_epochs == 0:
-                self.save_status(os.path.join(self.status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
             # train step
             for step, images in enumerate(data_loader):
                 self.optimizer.zero_grad()
@@ -74,6 +74,15 @@ class Palette:
                 self.loss.backward()
                 self.optimizer.step()
                 self.ema.update()
+            # save status
+            if self.status_save_dir is not None and self.epoch % self.status_save_epochs == 0:
+                self.save_status(os.path.join(self.status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
+            # mid validation
+            if validation is not None:
+                v_con = validation['condition']
+                v_con = v_con.to(self.device)
+                v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + validation['postfix'])
+                self.inference(x_con=v_con, output_path=v_output)
             # update epoch
             self.epoch += 1
         # save final status
@@ -85,13 +94,18 @@ class Palette:
         rets = []
         for step, images in enumerate(data_loader):
             x_con = images['condition']
-            batch_size, _, h, w = x_con.shape
-            noise = torch.randn((batch_size, self.noise_channel, h, w))
-            x_ret = self.diffusion_model.inference(noise, x_cond=x_con)
-            if output_dir is not None:
-                x_pil = utils.tensor2PIL(x_ret)
-                x_pil.save(os.path.join(output_dir, 'ret_' + images['name']))
-            else:
-                rets.append(x_ret)
+            output_path = None if output_dir is None else os.path.join(output_dir, 'ret_' + images['name'])
+            x_ret = self.inference(x_con=x_con, output_path=output_path)
+            rets.append(x_ret)
         self.ema.restore()
         return rets
+
+    def inference(self, x_con: torch.Tensor, output_path=None):
+        batch_size, _, h, w = x_con.shape
+        noise = torch.randn((batch_size, self.noise_channel, h, w))
+        x_ret = self.diffusion_model.inference(noise, x_cond=x_con)
+        if output_path is not None:
+            x_pils = utils.tensor2PIL(x_ret)
+            for x_pil in x_pils:
+                x_pil.save(output_path)
+        return x_ret

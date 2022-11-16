@@ -11,7 +11,7 @@ import datasets
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', type=str, required=True)
-    parser.add_argument('-x', '--update', type=str)
+    parser.add_argument('-x', '--update', type=json.loads)
     args = parser.parse_args()
 
     try:

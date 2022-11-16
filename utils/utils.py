@@ -115,7 +115,7 @@ def tensor2PIL(tsr: torch.Tensor):
     tsr = tsr.detach().cpu()
     tsr = (tsr + 1) / 2
     tf = transforms.Compose([transforms.ToPILImage()])
-    assert len(tsr.shape) > 1 and len(str.shape) <= 4
+    assert len(tsr.shape) > 1 and len(tsr.shape) <= 4
     if len(tsr.shape) < 4:
         return tf(tsr)
     else:

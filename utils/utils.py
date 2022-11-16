@@ -1,4 +1,5 @@
 import torch
+from torchvision import transforms
 import numpy as np
 from PIL import Image
 import math
@@ -41,7 +42,6 @@ def rgb2xyz(r, g, b):
     x = 0.4124564 * rr + 0.3575761 * gg + 0.1804375 * bb
     y = 0.2126729 * rr + 0.7151522 * gg + 0.0721750 * bb
     z = 0.0193339 * rr + 0.1191920 * gg + 0.9503041 * bb
-
     return x, y, z
 
 
@@ -55,7 +55,6 @@ def xyz2rgb(x, y, z):
     r = min(max(round(rr), 255), 0)
     g = min(max(round(gg), 255), 0)
     b = min(max(round(bb), 255), 0)
-
     return r, g, b
 
 
@@ -75,7 +74,6 @@ def xyz2lab(x, y, z):
     L = max(116 * fy - 16.0, 0.0)
     a = 500 * (fx - fy)
     b = 200 * (fy - fz)
-
     return L, a, b
 
 
@@ -95,7 +93,6 @@ def lab2xyz(l, a, b):
     x *= x_n
     y *= y_n
     z *= z_n
-
     return x, y, z
 
 
@@ -105,21 +102,20 @@ def rgb2lab(r: int, g: int, b: int):
     '''
     x, y, z = rgb2xyz(r, g, b)
     L, a, b = xyz2lab(x, y, z)
-
     return L, a, b
 
 
 def lab2rgb(l, a, b):
     x, y, z = lab2xyz(l, a, b)
     r, g, b = xyz2rgb(x, y, z)
-
     return r, g, b
 
 
 def tensor2PIL(tsr: torch.Tensor):
-    arr = tsr.detach().cpu().numpy()
-    arr = np.around((arr + 1) * 255 / 2).astype('int64')
-    return Image.fromarray(arr)
+    tsr = tsr.detach().cpu()
+    tsr = (tsr + 1) / 2
+    tf = transforms.Compose([transforms.ToPILImage()])
+    return tf(tsr)
 
 
 def is_image(filename: str):

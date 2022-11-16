@@ -11,6 +11,7 @@ class Palette:
         self.epoch = 0
         self.loss = 1e+5
         # gaussian diffusion
+        self.noise_channel = args['diffusion']['unet']['channel_out']
         self.diffusion_model = GaussianDiffusion(args=args['diffusion'])
         self.diffusion_model.to(device=self.device)
         # optimizer
@@ -85,7 +86,7 @@ class Palette:
         for step, images in enumerate(data_loader):
             x_con = images['condition']
             batch_size, _, h, w = x_con.shape
-            noise = torch.randn((batch_size, 2, h, w))
+            noise = torch.randn((batch_size, self.noise_channel, h, w))
             x_ret = self.diffusion_model.inference(noise, x_cond=x_con)
             if output_dir is not None:
                 x_pil = utils.tensor2PIL(x_ret)

@@ -8,7 +8,7 @@
     "model": {
         "optimizer": {
             "name": "Adam",
-            "learning_rate": 5e-4
+            "learning_rate": 5e-5
         },
         "ema": {
             "decay": 0.999
@@ -22,7 +22,7 @@
             "unet": {
                 "channel_in": 4,
                 "channel_out": 3,
-                "channel_mult": [1, 2, 2, 2]
+                "channel_mult": [1, 2, 4, 8]
             }
         },
         "status": {

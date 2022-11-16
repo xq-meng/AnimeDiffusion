@@ -37,4 +37,4 @@ if __name__ == '__main__':
 
     # inference
     utils.mkdir(config['test']['output_dir'])
-    model.inference(data_loader=test_dataset, output_dir=config['test']['output_dir'])
+    model.inference(data_loader=test_data_loader, output_dir=config['test']['output_dir'])

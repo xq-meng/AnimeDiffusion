@@ -1,6 +1,6 @@
 {
     "train": {
-        "epochs": 50
+        "epochs": 0
     },
     "test": {
         "output_dir": "./out/result"

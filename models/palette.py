@@ -91,6 +91,7 @@ class Palette:
             # update learning rate
             if self.lr_deacy > 0:
                 self.opt_lr_scheduler.step()
+                self._logger.info("Epoch = %d, Learning Rate = %f", self.epoch, self.optimizer.state_dict()['param_groups'][0]['lr'])
         # save final status
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))

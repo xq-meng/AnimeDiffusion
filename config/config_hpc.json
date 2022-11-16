@@ -15,7 +15,7 @@
             "learning_rate": 5e-4,
             "beta1": 0.5,
             "beta2": 0.999,
-            "decay": -1
+            "decay": 0.99
         },
         "ema": {
             "decay": 0.999

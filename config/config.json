@@ -13,8 +13,9 @@
         "optimizer": {
             "name": "Adam",
             "learning_rate": 5e-4,
-            "beta1": 0.5,
-            "beta2": 0.999
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "decay": 0.96
         },
         "ema": {
             "decay": 0.999

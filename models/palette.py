@@ -18,11 +18,14 @@ class Palette:
         opt_learning_rate = args['optimizer']['learning_rate'] if 'learning_rate' in args['optimizer'] else 5e-4
         opt_beta1 = args['optimizer']['beta1'] if 'beta1' in args['optimizer'] else 0.9
         opt_beta2 = args['optimizer']['beta2'] if 'beta2' in args['optimizer'] else 0.999
-
+        self.lr_deacy = args['optimizer']['decay'] if 'decay' in args['optimizer'] else -1.0
         if args['optimizer']['name'] == 'SGD':
             self.optimizer = torch.optim.SGD(self.diffusion_model.parameters(), lr=opt_learning_rate)
         else:
             self.optimizer = torch.optim.Adam(self.diffusion_model.parameters(), lr=opt_learning_rate, betas=(opt_beta1, opt_beta2))
+        if self.lr_deacy > 0:
+            self.opt_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=self.optimizer, gamma=self.lr_deacy)
+
         # ema
         self.ema_decay = min(max(args['ema']['decay'], 0), 1)
         self.ema = utils.ema(self.diffusion_model.denoise_fn, self.ema_decay)
@@ -85,6 +88,9 @@ class Palette:
                 self.inference(x_con=v_con, output_path=v_output)
             # update epoch
             self.epoch += 1
+            # update learning rate
+            if self.lr_deacy > 0:
+                self.opt_lr_scheduler.step()
         # save final status
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))

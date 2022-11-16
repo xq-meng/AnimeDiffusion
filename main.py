@@ -11,7 +11,7 @@ import datasets
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', type=str, required=True)
-    parser.add_argument('-x', '--update', type=json.loads)
+    parser.add_argument('-x', '--update', type=json.loads, default=None)
     args = parser.parse_args()
 
     try:
@@ -23,6 +23,10 @@ if __name__ == '__main__':
     except PermissionError:
         print("Unable to access: {}".format(args.config))
         exit()
+
+    # update config with command line input
+    utils.update_config(config=config, enhance_parse=args.update)
+    print(config)
 
     # logger initialize
     logger = utils.Logger(name='base_logger', **config['logging'])
@@ -49,4 +53,4 @@ if __name__ == '__main__':
 
     # inference
     utils.mkdir(config['test']['output_dir'])
-    model.inference(data_loader=test_data_loader, output_dir=config['test']['output_dir'])
+    results = model.inference(data_loader=test_data_loader, output_dir=config['test']['output_dir'])

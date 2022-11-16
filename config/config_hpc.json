@@ -1,6 +1,6 @@
 {
     "train": {
-        "epochs": 50
+        "epochs": 100
     },
     "test": {
         "output_dir": "/output/result"
@@ -12,9 +12,10 @@
     "model": {
         "optimizer": {
             "name": "Adam",
-            "learning_rate": 5e-5,
+            "learning_rate": 5e-4,
             "beta1": 0.5,
-            "beta2": 0.999
+            "beta2": 0.999,
+            "decay": 0.98
         },
         "ema": {
             "decay": 0.999

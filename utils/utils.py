@@ -113,8 +113,7 @@ def lab2rgb(l, a, b):
 
 def tensor2PIL(tsr: torch.Tensor):
     tsr = tsr.detach().cpu()
-    tsr = (tsr + 1) / 2
-    tf = transforms.Compose([transforms.ToPILImage()])
+    tf = transforms.ToPILImage()
     assert len(tsr.shape) > 1 and len(tsr.shape) <= 4
     if len(tsr.shape) < 4:
         return tf(tsr)
@@ -126,7 +125,11 @@ def tensor2PIL(tsr: torch.Tensor):
 
 
 def PIL2tensor(img):
-    tsr = transforms.PILToTensor()(img)
+    tf_condition = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[.5], std=[.5])
+    ])
+    tsr = tf_condition(img)
     return tsr.unsqueeze(dim=0)
 
 

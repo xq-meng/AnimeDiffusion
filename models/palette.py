@@ -103,6 +103,7 @@ class Palette:
     def inference(self, x_con: torch.Tensor, output_path=None):
         batch_size, _, h, w = x_con.shape
         noise = torch.randn((batch_size, self.noise_channel, h, w))
+        noise = noise.to(self.device)
         x_ret = self.diffusion_model.inference(noise, x_cond=x_con)
         if output_path is not None:
             x_pils = utils.tensor2PIL(x_ret)

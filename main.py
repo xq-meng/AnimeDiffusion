@@ -26,7 +26,6 @@ if __name__ == '__main__':
 
     # update config with command line input
     utils.update_config(config=config, enhance_parse=args.update)
-    print(config)
 
     # logger initialize
     logger = utils.Logger(name='base_logger', **config['logging'])

@@ -44,6 +44,7 @@ class Palette:
         torch.save({
             'epoch': self.epoch,
             'diffusion_state_dict': self.diffusion_model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
             'loss': self.loss,
             'ema_shadow': self.ema.shadow,
             'ema_backup': self.ema.backup},
@@ -56,6 +57,7 @@ class Palette:
         self.epoch = a_status['epoch']
         self.loss = a_status['loss']
         self.diffusion_model.load_state_dict(a_status['diffusion_state_dict'])
+        self.optimizer.load_state_dict(a_status['optimizer_state_dict'])
         self._logger.info('Load status from %s', path_to_status)
         self._logger.info('Current epoch : %d', self.epoch)
         self._logger.info('Current loss : %f', self.loss)

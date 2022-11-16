@@ -106,7 +106,7 @@ class Palette:
         noise = noise.to(self.device)
         x_ret = self.diffusion_model.inference(noise, x_cond=x_con)
         if output_path is not None:
-            x_pils = utils.tensor2PIL(x_ret)
+            x_pils = utils.tensor2PIL(x_ret[-1])
             for x_pil in x_pils:
                 x_pil.save(output_path)
         return x_ret

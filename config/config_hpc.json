@@ -39,7 +39,7 @@
                 "condition_path": "/data/xqmeng/Anime/Anime/train/condition"
             },
             "dataloader": {
-                "batch_size": 64,
+                "batch_size": 32,
                 "num_workers": 2,
                 "shuffle": true,
                 "pin_memory": true,

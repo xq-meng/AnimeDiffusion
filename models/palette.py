@@ -83,7 +83,7 @@ class Palette:
             if self.status_save_dir is not None and self.epoch % self.status_save_epochs == 0:
                 self.save_status(os.path.join(self.status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
             # mid validation
-            if validations:
+            if len(validations) > 0:
                 for validation in validations:
                     v_con = validation['condition']
                     v_con = v_con.to(self.device)

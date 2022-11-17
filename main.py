@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # validation
     validations = []
-    if 'validation' in config:
+    if 'validations' in config:
         for validation_config in config['validations']:
             validation = {}
             val_img = Image.open(validation_config['image_path'])
@@ -48,7 +48,8 @@ if __name__ == '__main__':
             if distortion_guidance:
                 val_distortion = Image.open(validation_config['distortion_guidance'])
                 validation['condition'] = torch.cat([validation['condition'], utils.PIL2tensor(val_distortion)], dim=1)
-            (validation['filename'], validation['postfix']) = os.path.splitext(validation_config['image_path'])
+            validation['filename'] = os.path.basename(validation_config['image_path'])
+            validation['postfix'] = os.path.splitext(validation_config['image_path'])[-1]
             validation['output_dir'] = validation_config['output_dir']
             validations.append(validation)
             utils.mkdir(validation['output_dir'])

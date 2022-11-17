@@ -1,14 +1,25 @@
 {
+    "components": {
+        "distortion_guidance": true
+    },
     "train": {
         "epochs": 10
     },
     "test": {
         "output_dir": "./out/result"
     },
-    "validation": {
-        "image_path": "/Users/xqmeng/workspace/data/Anime/test/condition/1.jpg",
-        "output_dir": "./out/validation"
-    },
+    "validations": [
+        {
+            "image_path": "/Users/xqmeng/workspace/data/Anime/test/condition/1.jpg",
+            "distortion_guidance": "/Users/xqmeng/workspace/data/Anime/test/reference/1.jpg",
+            "output_dir": "./out/validation"
+        },
+        {
+            "image_path": "/Users/xqmeng/workspace/data/Anime/test/condition/1.jpg",
+            "distortion_guidance": "/Users/xqmeng/workspace/data/Anime/test/reference/2.jpg",
+            "output_dir": "./out/validation"
+        }
+    ],
     "model": {
         "optimizer": {
             "name": "Adam",
@@ -27,7 +38,7 @@
                 "linear_end": 1e-2
             },
             "unet": {
-                "channel_in": 4,
+                "channel_in": 7,
                 "channel_out": 3,
                 "channel_mult": [1, 2, 2, 2],
                 "attention_head": 4

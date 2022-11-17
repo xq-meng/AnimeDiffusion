@@ -1,6 +1,7 @@
 import os
 import argparse
 import json
+import torch
 from torch.utils.data import DataLoader
 from PIL import Image
 import utils
@@ -31,24 +32,30 @@ if __name__ == '__main__':
     logger = utils.Logger(name='base_logger', **config['logging'])
 
     # dataset
-    train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'])
+    distortion_guidance = config['components']['distortion_guidance']
+    train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'], distortion_guidance=distortion_guidance)
     train_data_loader = DataLoader(dataset=train_dataset ,**config['dataset']['train']['dataloader'])
-    test_dataset = datasets.ColorizationDataset(**config['dataset']['test']['path'])
+    test_dataset = datasets.ColorizationDataset(**config['dataset']['test']['path'], distortion_guidance=distortion_guidance)
     test_data_loader = DataLoader(dataset=test_dataset, **config['dataset']['test']['dataloader'])
 
     # validation
-    validation = None
+    validations = []
     if 'validation' in config:
-        validation = {}
-        val_img = Image.open(config['validation']['image_path'])
-        validation['condition'] = utils.PIL2tensor(val_img)
-        validation['postfix'] = os.path.splitext(config['validation']['image_path'])[-1]
-        validation['output_dir'] = config['validation']['output_dir']
-        utils.mkdir(validation['output_dir'])
+        for validation_config in config['validations']:
+            validation = {}
+            val_img = Image.open(validation_config['image_path'])
+            validation['condition'] = utils.PIL2tensor(val_img)
+            if distortion_guidance:
+                val_distortion = Image.open(validation_config['distortion_guidance'])
+                validation['condition'] = torch.cat([validation['condition'], utils.PIL2tensor(val_distortion)], dim=1)
+            (validation['filename'], validation['postfix']) = os.path.splitext(validation_config['image_path'])
+            validation['output_dir'] = validation_config['output_dir']
+            validations.append(validation)
+            utils.mkdir(validation['output_dir'])
 
     # palette
     model = Palette(config['model'], logger=logger)
-    model.train(train_epochs=config['train']['epochs'], data_loader=train_data_loader, validation=validation)
+    model.train(train_epochs=config['train']['epochs'], data_loader=train_data_loader, validations=validations)
 
     # inference
     utils.mkdir(config['test']['output_dir'])

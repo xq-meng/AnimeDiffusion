@@ -62,7 +62,7 @@ class Palette:
         self._logger.info('Current epoch : %d', self.epoch)
         self._logger.info('Current loss : %f', self.loss)
 
-    def train(self, train_epochs, data_loader, validation=None):
+    def train(self, train_epochs, data_loader, validations=[]):
         while self.epoch < train_epochs:
             # train step
             for step, images in enumerate(data_loader):
@@ -83,11 +83,12 @@ class Palette:
             if self.status_save_dir is not None and self.epoch % self.status_save_epochs == 0:
                 self.save_status(os.path.join(self.status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
             # mid validation
-            if validation is not None:
-                v_con = validation['condition']
-                v_con = v_con.to(self.device)
-                v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + validation['postfix'])
-                self.inference(x_con=v_con, output_path=v_output)
+            if validations:
+                for validation in validations:
+                    v_con = validation['condition']
+                    v_con = v_con.to(self.device)
+                    v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + validation['filename'])
+                    self.inference(x_con=v_con, output_path=v_output)
             # update epoch
             self.epoch += 1
             # update learning rate

@@ -1,13 +1,26 @@
 {
+    "components": {
+        "distortion_guidance": true
+    },
     "train": {
         "epochs": 100
     },
     "test": {
         "output_dir": "/output/result"
     },
+    "validations": [
+        {
+            "image_path": "/data/xqmeng/Anime/Anime/test/condition/1.jpg",
+            "distortion_guidance": "/data/xqmeng/Anime/Anime/test/condition/1.jpg",
+            "output_dir": "/output/validation"
+        },
+        {
+            "image_path": "/data/xqmeng/Anime/Anime/test/condition/1.jpg",
+            "distortion_guidance": "/data/xqmeng/Anime/Anime/test/condition/2.jpg",
+            "output_dir": "/output/validation"
+        }
+    ],
     "validation": {
-        "image_path": "/data/xqmeng/Anime/Anime/test/condition/1.jpg",
-        "output_dir": "/output/validation"
     },
     "model": {
         "optimizer": {
@@ -27,7 +40,7 @@
                 "linear_end": 1e-2
             },
             "unet": {
-                "channel_in": 4,
+                "channel_in": 7,
                 "channel_out": 3,
                 "channel_mult": [1, 2, 4, 8],
                 "attention_head": 4

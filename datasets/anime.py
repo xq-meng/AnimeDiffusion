@@ -1,4 +1,5 @@
 import os
+import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
@@ -7,9 +8,17 @@ import utils
 
 class ColorizationDataset(Dataset):
 
-    def __init__(self, reference_path, condition_path):
+    def __init__(
+        self,
+        reference_path,
+        condition_path,
+        distortion_guidance=False,
+        semantical_guidance=False
+    ):
         self.reference_path = reference_path
         self.condition_path = condition_path
+        self.distortion_guidance = distortion_guidance
+        self.semantical_guidance = semantical_guidance
         self.tf_reference = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
@@ -31,6 +40,10 @@ class ColorizationDataset(Dataset):
         ret['reference'] = self.tf_reference(img_reference)
         ret['condition'] = self.tf_condition(img_condition)
         ret['name'] = filename
+        # distortion guidance
+        if self.distortion_guidance:
+            img_distortion = utils.warp_image(img_reference)
+            ret['condition'] = torch.cat([ret['condition'], self.tf_reference(img_distortion)], dim=0)
         return ret
 
     def __len__(self):

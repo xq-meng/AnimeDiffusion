@@ -113,15 +113,16 @@ def lab2rgb(l, a, b):
 
 def tensor2PIL(tsr: torch.Tensor):
     tsr = tsr.detach().cpu()
-    tf = transforms.ToPILImage()
-    assert len(tsr.shape) > 1 and len(tsr.shape) <= 4
-    if len(tsr.shape) < 4:
-        return tf(tsr)
-    else:
-        ret = []
-        for c in range(tsr.shape[0]):
-            ret.append(tf(tsr[c]))
-        return ret
+    assert len(tsr.shape) == 4
+    batch_size = tsr.shape[0]
+    ret = []
+    for c in range(batch_size):
+        arr = tsr[c].numpy().copy()
+        arr = np.around((arr + 1.0) / 2.0 * 255).astype(int)
+        arr = arr.swapaxes(0, 1)
+        arr = arr.swapaxes(1, 2)
+        ret.append(Image.fromarray(np.uint8(arr)))
+    return ret
 
 
 def PIL2tensor(img):

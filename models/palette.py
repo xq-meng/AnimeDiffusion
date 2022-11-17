@@ -83,12 +83,11 @@ class Palette:
             if self.status_save_dir is not None and self.epoch % self.status_save_epochs == 0:
                 self.save_status(os.path.join(self.status_save_dir, 'epoch_' + str(self.epoch).zfill(5) + '.pkl'))
             # mid validation
-            if len(validations) > 0:
-                for validation in validations:
-                    v_con = validation['condition']
-                    v_con = v_con.to(self.device)
-                    v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + validation['filename'])
-                    self.inference(x_con=v_con, output_path=v_output)
+            for vi, validation in enumerate(validations):
+                v_con = validation['condition']
+                v_con = v_con.to(self.device)
+                v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + str(vi) + '_' + validation['filename'])
+                self.inference(x_con=v_con, output_path=v_output)
             # update epoch
             self.epoch += 1
             # update learning rate

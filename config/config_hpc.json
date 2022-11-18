@@ -1,11 +1,11 @@
 {
     "tasks": {
         "train": {
-            "run": true,
+            "run": false,
             "epochs": 100
         },
         "test": {
-            "run": false,
+            "run": true,
             "output_dir": "/output/result"
         }
     },
@@ -27,8 +27,8 @@
     "model": {
         "optimizer": {
             "name": "Adam",
-            "learning_rate": 5e-5,
-            "beta1": 0.5,
+            "learning_rate": 1e-5,
+            "beta1": 0.9,
             "beta2": 0.999,
             "decay": -1
         },
@@ -51,7 +51,7 @@
         "status": {
             "save_epochs": 20,
             "save_dir": "/output/status",
-            "load_path": ""
+            "load_path": "/model/xqmeng/CLIPalette-ep100/trained.pkl"
         }
     },
     "dataset": {
@@ -62,7 +62,7 @@
                 "condition_path": "/data/xqmeng/Anime/Anime/train/condition"
             },
             "dataloader": {
-                "batch_size": 32,
+                "batch_size": 64,
                 "num_workers": 2,
                 "shuffle": true,
                 "pin_memory": true,

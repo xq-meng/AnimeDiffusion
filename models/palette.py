@@ -25,7 +25,6 @@ class Palette:
             self.optimizer = torch.optim.Adam(self.diffusion_model.parameters(), lr=opt_learning_rate, betas=(opt_beta1, opt_beta2))
         if self.lr_deacy > 0:
             self.opt_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer=self.optimizer, gamma=self.lr_deacy)
-
         # ema
         self.ema_decay = min(max(args['ema']['decay'], 0), 1)
         self.ema = utils.ema(self.diffusion_model.denoise_fn, self.ema_decay)
@@ -87,7 +86,9 @@ class Palette:
                 v_con = validation['condition']
                 v_con = v_con.to(self.device)
                 v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + str(vi) + '_' + validation['filename'])
-                self.inference(x_con=v_con, output_path=v_output)
+                v_ret = self.inference(v_con)[-1]
+                v_pil = utils.tensor2PIL(v_ret)
+                v_pil.save(v_output)
             # update epoch
             self.epoch += 1
             # update learning rate
@@ -98,24 +99,22 @@ class Palette:
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
 
-    def inference(self, data_loader, output_dir=None):
-        self.ema.apply_shadow()
-        rets = []
-        for step, images in enumerate(data_loader):
-            x_con = images['condition']
-            output_path = None if output_dir is None else os.path.join(output_dir, 'ret_' + images['name'])
-            x_ret = self.inference(x_con=x_con, output_path=output_path)
-            rets.append(x_ret)
-        self.ema.restore()
-        return rets
-
-    def inference(self, x_con: torch.Tensor, output_path=None):
+    def inference(self, x_con: torch.Tensor):
         batch_size, _, h, w = x_con.shape
         noise = torch.randn((batch_size, self.noise_channel, h, w))
         noise = noise.to(self.device)
-        x_ret = self.diffusion_model.inference(noise, x_cond=x_con)
-        if output_path is not None:
-            x_pils = utils.tensor2PIL(x_ret[-1])
-            for x_pil in x_pils:
-                x_pil.save(output_path)
-        return x_ret
+        return self.diffusion_model.inference(noise, x_cond=x_con)
+
+    def test(self, data_loader, output_dir):
+        self.ema.apply_shadow()
+        rets = []
+        for step, images in enumerate(data_loader):
+            x_cons = images['condition']
+            x_rets = self.inference(x_con=x_cons)[-1]
+            x_pils = utils.tensor2PIL(x_rets)
+            for i, filename in enumerate(images['name']):
+                output_path = os.path.join(output_dir, 'ret_' + filename)
+                x_pils[i].save(output_path)
+                self._logger.info("Test output saved as {0}".format(output_path))
+        self.ema.restore()
+        return rets

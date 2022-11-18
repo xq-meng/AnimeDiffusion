@@ -1,12 +1,16 @@
 {
+    "tasks": {
+        "train": {
+            "run": false,
+            "epochs": 10
+        },
+        "test": {
+            "run": true,
+            "output_dir": "./out/result"
+        }
+    },
     "components": {
         "distortion_guidance": true
-    },
-    "train": {
-        "epochs": 10
-    },
-    "test": {
-        "output_dir": "./out/result"
     },
     "validations": [
         {

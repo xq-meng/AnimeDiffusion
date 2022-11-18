@@ -1,12 +1,16 @@
 {
+    "tasks": {
+        "train": {
+            "run": true,
+            "epochs": 100
+        },
+        "test": {
+            "run": false,
+            "output_dir": "/output/result"
+        }
+    },
     "components": {
         "distortion_guidance": true
-    },
-    "train": {
-        "epochs": 100
-    },
-    "test": {
-        "output_dir": "/output/result"
     },
     "validations": [
         {
@@ -20,15 +24,13 @@
             "output_dir": "/output/validation"
         }
     ],
-    "validation": {
-    },
     "model": {
         "optimizer": {
             "name": "Adam",
             "learning_rate": 5e-5,
             "beta1": 0.5,
             "beta2": 0.999,
-            "decay": 0.98
+            "decay": -1
         },
         "ema": {
             "decay": 0.999

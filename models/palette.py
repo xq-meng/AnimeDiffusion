@@ -87,7 +87,7 @@ class Palette:
                 v_con = v_con.to(self.device)
                 v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + str(vi) + '_' + validation['filename'])
                 v_ret = self.inference(v_con)[-1]
-                v_pil = utils.tensor2PIL(v_ret)
+                v_pil = utils.tensor2PIL(v_ret)[0]
                 v_pil.save(v_output)
             # update epoch
             self.epoch += 1

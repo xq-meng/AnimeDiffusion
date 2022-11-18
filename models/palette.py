@@ -34,7 +34,6 @@ class Palette:
         # status save directory
         self.status_save_epochs = args['status']['save_epochs']
         self.status_save_dir = args['status']['save_dir']
-        utils.mkdir(self.status_save_dir)
         # load status from file
         if 'load_path' in args['status'] and os.access(args['status']['load_path'], os.R_OK):
             self.load_status(args['status']['load_path'])
@@ -62,6 +61,7 @@ class Palette:
         self._logger.info('Current loss : %f', self.loss)
 
     def train(self, train_epochs, data_loader, validations=[]):
+        utils.mkdir(self.status_save_dir)
         while self.epoch < train_epochs:
             # train step
             for step, images in enumerate(data_loader):

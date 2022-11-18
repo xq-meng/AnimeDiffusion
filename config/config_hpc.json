@@ -2,7 +2,7 @@
     "tasks": {
         "train": {
             "run": false,
-            "epochs": 100
+            "epochs": 200
         },
         "test": {
             "run": true,

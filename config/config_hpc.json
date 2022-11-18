@@ -1,11 +1,11 @@
 {
     "tasks": {
         "train": {
-            "run": true,
+            "run": false,
             "epochs": 200
         },
         "test": {
-            "run": false,
+            "run": true,
             "output_dir": "/output/result"
         }
     },

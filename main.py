@@ -67,4 +67,4 @@ if __name__ == '__main__':
         test_data_loader = DataLoader(dataset=test_dataset, **config['dataset']['test']['dataloader'])
         utils.mkdir(config['tasks']['test']['output_dir'])
         # run test
-        results = model.test(data_loader=test_data_loader, output_dir=config['tasks']['test']['output_dir'])
+        model.test(data_loader=test_data_loader, output_dir=config['tasks']['test']['output_dir'])

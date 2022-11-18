@@ -24,4 +24,4 @@ def warp_image(image):
     grids = tps.tps_grid(theta, c_dst, arr.shape)
     mapx, mapy = tps.tps_grid_to_remap(grids, arr.shape)
     warped_arr = cv2.remap(arr, mapx, mapy, cv2.INTER_CUBIC)
-    return Image.fromarray(warped_arr)
+    return Image.fromarray(warped_arr).rotate(random.randrange(360)).resize(image.size)

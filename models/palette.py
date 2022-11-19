@@ -86,7 +86,7 @@ class Palette:
                 v_con = validation['condition']
                 v_con = v_con.to(self.device)
                 v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + str(vi) + '_' + validation['filename'])
-                v_ret = self.inference(v_con, eta=0)[-1]
+                v_ret = self.inference(v_con)[-1]
                 v_pil = utils.tensor2PIL(v_ret)[0]
                 v_pil.save(v_output)
             # update epoch
@@ -99,9 +99,10 @@ class Palette:
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
 
-    def inference(self, x_con: torch.Tensor, eta=1):
+    def inference(self, x_con: torch.Tensor, eta=1, noise=None):
         batch_size, _, h, w = x_con.shape
-        noise = torch.randn((batch_size, self.noise_channel, h, w))
+        if noise is None:
+            noise = torch.randn((batch_size, self.noise_channel, h, w))
         noise = noise.to(self.device)
         return self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
 
@@ -110,7 +111,8 @@ class Palette:
         for step, images in enumerate(data_loader):
             x_cons = images['condition']
             x_cons = x_cons.to(self.device)
-            x_rets = self.inference(x_con=x_cons, eta=0)[-1]
+            x_noise = self.diffusion_model.q_sample(x_cons[1:], t=500)
+            x_rets = self.inference(x_con=x_cons, noise=x_noise)[-1]
             x_pils = utils.tensor2PIL(x_rets)
             for i, filename in enumerate(images['name']):
                 output_path = os.path.join(output_dir, 'ret_' + filename)

@@ -70,7 +70,7 @@ class GaussianDiffusion(nn.Module):
     @torch.no_grad()
     def unseen_transform(self, x_0):
         batch_size = x_0.shape[0]
-        t = (self.time_steps - 1) * torch.ones(batch_size)
+        t = (self.time_steps - 1) * torch.ones(batch_size).long()
         with torch.no_grad():
             x_noise = self.q_sample(x_0, t=t)
         return x_noise * self.gammas[-1] + torch.randn_like(x_noise) * (1 - self.gammas[-1])

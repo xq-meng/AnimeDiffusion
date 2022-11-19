@@ -42,10 +42,7 @@ class GaussianDiffusion(nn.Module):
     def q_sample(self, x_0, t, noise=None):
         if noise is None:
             noise = torch.randn_like(x_0)
-        gammas_t = utils.extract(self.gammas, t, x_shape=x_0.shape)
-        print(gammas_t.device)
-        print(x_0.device)
-        print(noise.device)
+        gammas_t = utils.extract(self.gammas, t, x_shape=x_0.shape).to(x_0.device)
         return torch.sqrt(gammas_t) * x_0 + torch.sqrt(1 - gammas_t) * noise
 
     @torch.no_grad()

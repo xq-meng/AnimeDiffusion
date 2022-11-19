@@ -110,7 +110,7 @@ class Palette:
         for step, images in enumerate(data_loader):
             x_cons = images['condition']
             x_cons = x_cons.to(self.device)
-            x_rets = self.inference(x_con=x_cons)[-1]
+            x_rets = self.inference(x_con=x_cons, eta=0)[-1]
             x_pils = utils.tensor2PIL(x_rets)
             for i, filename in enumerate(images['name']):
                 output_path = os.path.join(output_dir, 'ret_' + filename)

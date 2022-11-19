@@ -107,7 +107,7 @@ class Palette:
         return self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
 
     def test(self, data_loader, output_dir):
-        # self.ema.apply_shadow()
+        self.ema.apply_shadow()
         for step, images in enumerate(data_loader):
             x_cons = images['condition']
             x_cons = x_cons.to(self.device)
@@ -118,4 +118,4 @@ class Palette:
                 output_path = os.path.join(output_dir, 'ret_' + filename)
                 x_pils[i].save(output_path)
                 self._logger.info("Test output saved as {0}".format(output_path))
-        # self.ema.restore()
+        self.ema.restore()

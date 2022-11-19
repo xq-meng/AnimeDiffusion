@@ -46,24 +46,24 @@ class GaussianDiffusion(nn.Module):
         return torch.sqrt(gammas_t) * x_0 + torch.sqrt(1 - gammas_t) * noise
 
     @torch.no_grad()
-    def p_sample(self, x_t, t, x_cond=None):
+    def p_sample(self, x_t, t, x_cond=None, eta=1):
         predicted_noise = self.denoise_fn(x_t, t) if x_cond is None else self.denoise_fn(torch.cat([x_t, x_cond], dim=1), t)
         predicted_x_0 = utils.extract(self.sqrt_reciprocal_gammas, t, x_t.shape) * x_t - utils.extract(self.sqrt_reciprocal_gammas_m1, t, x_t.shape) * predicted_noise
         predicted_x_0 = torch.clamp(predicted_x_0, min=-1., max=1.)
         posterior_mean = utils.extract(self.posterior_mean_coef1, t, x_t.shape) * predicted_x_0 + utils.extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
         posterior_log_variance = utils.extract(self.posterior_log_variance, t, x_t.shape)
         noise = torch.randn_like(x_t)
-        nonzero_mask = ((t != 0).float().view(-1, *([1] * (len(x_t.shape) - 1))))
+        nonzero_mask = eta * ((t != 0).float().view(-1, *([1] * (len(x_t.shape) - 1))))
         pred_x = posterior_mean + nonzero_mask * (0.5 * posterior_log_variance).exp() * noise
         return pred_x
 
     @torch.no_grad()
-    def inference(self, x_t, x_cond=None):
+    def inference(self, x_t, x_cond=None, eta=1):
         batch_size = x_t.shape[0]
         device = next(self.parameters()).device
         ret = []
         for i in reversed(range(0, self.time_steps)):
-            x_t = self.p_sample(x_t=x_t, t=torch.full((batch_size, ), i, device=device, dtype=torch.long), x_cond=x_cond)
+            x_t = self.p_sample(x_t=x_t, t=torch.full((batch_size, ), i, device=device, dtype=torch.long), x_cond=x_cond, eta=eta)
             ret.append(x_t.cpu())
         return ret
 

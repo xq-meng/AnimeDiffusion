@@ -86,7 +86,7 @@ class Palette:
                 v_con = validation['condition']
                 v_con = v_con.to(self.device)
                 v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + str(vi) + '_' + validation['filename'])
-                v_ret = self.inference(v_con)[-1]
+                v_ret = self.inference(v_con, eta=0)[-1]
                 v_pil = utils.tensor2PIL(v_ret)[0]
                 v_pil.save(v_output)
             # update epoch
@@ -99,11 +99,11 @@ class Palette:
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
 
-    def inference(self, x_con: torch.Tensor):
+    def inference(self, x_con: torch.Tensor, eta=1):
         batch_size, _, h, w = x_con.shape
         noise = torch.randn((batch_size, self.noise_channel, h, w))
         noise = noise.to(self.device)
-        return self.diffusion_model.inference(noise, x_cond=x_con)
+        return self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
 
     def test(self, data_loader, output_dir):
         # self.ema.apply_shadow()

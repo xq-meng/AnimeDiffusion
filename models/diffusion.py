@@ -67,6 +67,14 @@ class GaussianDiffusion(nn.Module):
             ret.append(x_t.cpu())
         return ret
 
+    @torch.no_grad()
+    def unseen_transform(self, x_0):
+        batch_size = x_0.shape[0]
+        t = (self.time_steps - 1) * torch.ones(batch_size)
+        with torch.no_grad():
+            x_noise = self.q_sample(x_0, t=t)
+        return x_noise * self.gammas[-1] + torch.randn_like(x_noise) * (1 - self.gammas[-1])
+
     def train(self, x, t, x_cond=None):
         """
         :param[in]  x       torch.Tensor    [batch_size x channel x height x weight]

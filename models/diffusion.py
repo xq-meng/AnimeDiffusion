@@ -72,10 +72,9 @@ class GaussianDiffusion(nn.Module):
         batch_size = x_0.shape[0]
         t = (self.time_steps - 1) * torch.ones(batch_size).long()
         gammas_t = utils.extract(self.gammas, t, x_shape=x_0.shape).to(x_0.device)
-        with torch.no_grad():
-            x_noise = self.q_sample(x_0, t=t)
-        print(gammas_t)
-        return torch.sqrt(gammas_t) * x_noise + torch.sqrt(1 - gammas_t) * torch.randn_like(x_noise)
+        noise = torch.randn_like(x_0)
+        x_noise = torch.sqrt(gammas_t) * x_0 + torch.sqrt(1 - gammas_t) * noise
+        return torch.sqrt(gammas_t) * x_noise + torch.sqrt(1 - gammas_t) * noise
 
     def train(self, x, t, x_cond=None):
         """

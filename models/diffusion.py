@@ -68,6 +68,10 @@ class GaussianDiffusion(nn.Module):
         return ret
 
     @torch.no_grad()
+    def inference_ddim(self, x_t, x_cond=None, eta=1):
+        pass
+
+    @torch.no_grad()
     def unseen_transform(self, x_0):
         batch_size = x_0.shape[0]
         t = (self.time_steps - 1) * torch.ones(batch_size).long()

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 from models.unet import UNet
 import utils
 
@@ -68,8 +69,20 @@ class GaussianDiffusion(nn.Module):
         return ret
 
     @torch.no_grad()
-    def inference_ddim(self, x_t, x_cond=None, eta=1):
-        pass
+    def inference_ddim(self, x_t, time_steps=100, x_cond=None, eta=1):
+        step_sequence = np.asarray(list(range(0, self.time_steps, self.time_steps // time_steps)))
+        step_sequence = step_sequence + 1
+        step_sequence_prev = np.append(np.array([0]), step_sequence[:-1])
+        batch_size = x_t.shape[0]
+        device = next(self.parameters()).device
+        for i in reversed(range(0, time_steps)):
+            t = torch.full((batch_size, ), step_sequence[i], device=device, dtype=torch.long)
+            prev_t = torch.full((batch_size, ), step_sequence_prev[i], device=device, dtype=torch.long)
+            gammas_t = utils.extract(self.gammas, t, x_shape=x_t.shape)
+            gammas_prev_t = utils.extract(self.gammas, prev_t, x_shape=x_t.shape)
+            predicted_noise = self.denoise_fn(x_t, t) if x_cond is None else self.denoise_fn(torch.cat([x_t, x_cond], dim=1), t)
+
+            pass
 
     @torch.no_grad()
     def unseen_transform(self, x_0):

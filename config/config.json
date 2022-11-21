@@ -7,6 +7,10 @@
         "test": {
             "run": true,
             "output_dir": "./out/result"
+        },
+        "fine_tune": {
+            "run": false,
+            "epochs": 10
         }
     },
     "components": {

@@ -56,6 +56,8 @@ class Palette:
         self.loss = a_status['loss']
         self.diffusion_model.load_state_dict(a_status['diffusion_state_dict'])
         self.optimizer.load_state_dict(a_status['optimizer_state_dict'])
+        self.ema.shadow = a_status['ema_shadow']
+        self.ema.backup = a_status['ema_backup']
         self._logger.info('Load status from %s', path_to_status)
         self._logger.info('Current epoch : %d', self.epoch)
         self._logger.info('Current loss : %f', self.loss)
@@ -86,7 +88,8 @@ class Palette:
                 v_con = validation['condition']
                 v_con = v_con.to(self.device)
                 v_output = os.path.join(validation['output_dir'], 'valid_epoch_' + str(self.epoch).zfill(5) + '_' + str(vi) + '_' + validation['filename'])
-                v_ret = self.inference(v_con)[-1]
+                with torch.no_grad():
+                    v_ret = self.inference(v_con)[-1]
                 v_pil = utils.tensor2PIL(v_ret)[0]
                 v_pil.save(v_output)
             # update epoch
@@ -104,18 +107,52 @@ class Palette:
         if noise is None:
             noise = torch.randn((batch_size, self.noise_channel, h, w))
         noise = noise.to(self.device)
-        return self.diffusion_model.inference_ddim(noise, x_cond=x_con, eta=eta)
+        with torch.no_grad():
+            ret = self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
+        return ret
 
     def test(self, data_loader, output_dir):
-        # self.ema.apply_shadow()
         for step, images in enumerate(data_loader):
             x_cons = images['condition']
             x_cons = x_cons.to(self.device)
-            x_noise = self.diffusion_model.unseen_transform(x_cons[:, 1:, :, :].to(self.device))
+            with torch.no_grad():
+                x_noise = self.diffusion_model.unseen_transform(x_cons[:, 1:, :, :].to(self.device))
             x_rets = self.inference(x_con=x_cons, noise=x_noise, eta=1)[-1]
             x_pils = utils.tensor2PIL(x_rets)
             for i, filename in enumerate(images['name']):
                 output_path = os.path.join(output_dir, 'ret_' + filename)
                 x_pils[i].save(output_path)
                 self._logger.info("Test output saved as {0}".format(output_path))
-        # self.ema.restore()
+
+    def fine_tune(self, epochs, data_loader, validations=[]):
+        utils.mkdir(self.status_save_dir)
+        ep = 0
+        while ep < epochs:
+            for step, images in enumerate(data_loader):
+                self.optimizer.zero_grad()
+                x_ref = images['reference']
+                x_con = images['condition']
+                x_ref = x_ref.to(self.device)
+                x_con = x_con.to(self.device)
+                with torch.no_grad():
+                    noise = self.diffusion_model.unseen_transform(x_con[:, 1:, :, :]).to(self.device)
+                loss = self.diffusion_model.fine_tune(x=x_ref, x_t=noise, x_cond=x_con)
+                if step % 200 == 0:
+                    self._logger.info("Fine tune epoch = %d, Loss = %f", ep, loss)
+                loss.backward()
+                self.optimizer.step()
+            if self.status_save_dir is not None and ep % self.status_save_epochs == 0:
+                self.save_status(os.path.join(self.status_save_dir, 'ep_' + str(self.epoch).zfill(4) + '_ft_' + str(ep).zfill(4) + '.pkl'))
+            # mid validation
+            for vi, validation in enumerate(validations):
+                v_con = validation['condition']
+                v_con = v_con.to(self.device)
+                v_output = os.path.join(validation['output_dir'], 'valid_ep_' + str(self.epoch).zfill(4) + '_ft_' +str(ep).zfill(4) + '_' + str(vi) + '_' + validation['filename'])
+                with torch.no_grad():
+                    v_ret = self.inference(v_con)[-1]
+                v_pil = utils.tensor2PIL(v_ret)[0]
+                v_pil.save(v_output)
+            ep += 1
+        # save final status
+        if self.status_save_dir is not None:
+            self.save_status(os.path.join(self.status_save_dir, 'ep_' + str(self.epoch).zfill(4) + '_ft_' + str(ep).zfill(4) + '.pkl'))

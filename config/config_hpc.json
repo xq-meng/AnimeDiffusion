@@ -7,6 +7,10 @@
         "test": {
             "run": false,
             "output_dir": "/output/result"
+        },
+        "fine_tune": {
+            "run": false,
+            "epochs": 10
         }
     },
     "components": {
@@ -51,7 +55,7 @@
         "status": {
             "save_epochs": 20,
             "save_dir": "/output/status",
-            "load_path": "/model/xqmeng/CLIPalette-ep100/trained.pkl"
+            "load_path": "/model/xqmeng/CLIPalette-ep200/trained.pkl"
         }
     },
     "dataset": {

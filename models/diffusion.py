@@ -68,7 +68,6 @@ class GaussianDiffusion(nn.Module):
             ret.append(x_t.cpu())
         return ret
 
-    @torch.no_grad()
     def inference_ddim(self, x_t, time_steps=100, x_cond=None, eta=1):
         step_sequence = np.asarray(list(range(0, self.time_steps, self.time_steps // time_steps)))
         step_sequence = step_sequence + 1
@@ -119,3 +118,11 @@ class GaussianDiffusion(nn.Module):
         # noise prediction
         noise_tilde = self.denoise_fn(x_noisy, t)
         return self.loss_fn(noise, noise_tilde)
+
+    def fine_tune(self, x, x_t=None, x_cond=None):
+        if x_t is None:
+            x_t = torch.randn_like(x)
+        assert x.shape == x_t.shape
+        # ddim inference
+        x_tilde = self.inference_ddim(x_t, self.time_steps // 10, x_cond=x_cond)
+        return self.loss_fn(x, x_tilde)

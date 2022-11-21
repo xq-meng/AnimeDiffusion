@@ -75,14 +75,22 @@ class GaussianDiffusion(nn.Module):
         step_sequence_prev = np.append(np.array([0]), step_sequence[:-1])
         batch_size = x_t.shape[0]
         device = next(self.parameters()).device
+        ret = []
         for i in reversed(range(0, time_steps)):
             t = torch.full((batch_size, ), step_sequence[i], device=device, dtype=torch.long)
             prev_t = torch.full((batch_size, ), step_sequence_prev[i], device=device, dtype=torch.long)
             gammas_t = utils.extract(self.gammas, t, x_shape=x_t.shape)
             gammas_prev_t = utils.extract(self.gammas, prev_t, x_shape=x_t.shape)
             predicted_noise = self.denoise_fn(x_t, t) if x_cond is None else self.denoise_fn(torch.cat([x_t, x_cond], dim=1), t)
-
-            pass
+            predicted_x_0 = (x_t - torch.sqrt(1. - gammas_t) * predicted_noise) / torch.sqrt(gammas_t)
+            predicted_x_0 = torch.clamp(predicted_x_0, min=-1., max=1.)
+            posterier_varience = (1. - gammas_prev_t) / (1. - gammas_t) * (1. - gammas_t / gammas_prev_t)
+            sigma_t = eta * torch.sqrt(posterier_varience)
+            predicted_x_t_direction = torch.sqrt(1. - gammas_prev_t - sigma_t**2) * predicted_noise
+            noise = torch.randn_like(x_t)
+            x_t = torch.sqrt(gammas_prev_t) * predicted_x_0 + predicted_x_t_direction + sigma_t * noise
+            ret.append(x_t)
+        return ret
 
     @torch.no_grad()
     def unseen_transform(self, x_0):

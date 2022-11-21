@@ -124,5 +124,5 @@ class GaussianDiffusion(nn.Module):
             x_t = torch.randn_like(x)
         assert x.shape == x_t.shape
         # ddim inference
-        x_tilde = self.inference_ddim(x_t, self.time_steps // 10, x_cond=x_cond)
+        x_tilde = self.inference_ddim(x_t, self.time_steps // 50, x_cond=x_cond)
         return self.loss_fn(x, x_tilde)

@@ -68,7 +68,7 @@ class GaussianDiffusion(nn.Module):
             ret.append(x_t.cpu())
         return ret
 
-    def inference_ddim(self, x_t, time_steps=100, x_cond=None, eta=1):
+    def inference_ddim(self, x_t, time_steps=10, x_cond=None, eta=1):
         step_sequence = np.asarray(list(range(0, self.time_steps, self.time_steps // time_steps)))
         step_sequence = step_sequence + 1
         step_sequence_prev = np.append(np.array([0]), step_sequence[:-1])
@@ -124,5 +124,5 @@ class GaussianDiffusion(nn.Module):
             x_t = torch.randn_like(x)
         assert x.shape == x_t.shape
         # ddim inference
-        x_tilde = self.inference_ddim(x_t, self.time_steps // 50, x_cond=x_cond)
+        x_tilde = self.inference_ddim(x_t, x_cond=x_cond)
         return self.loss_fn(x, x_tilde)

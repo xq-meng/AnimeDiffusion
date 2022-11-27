@@ -10,7 +10,8 @@
         },
         "fine_tune": {
             "run": false,
-            "epochs": 10
+            "epochs": 20,
+            "eta": 0
         }
     },
     "components": {
@@ -53,9 +54,9 @@
             }
         },
         "status": {
-            "save_epochs": 20,
+            "save_epochs": 2,
             "save_dir": "/output/status",
-            "load_path": "/model/xqmeng/CLIPalette-ep300-ft10/trained.pkl"
+            "load_path": "/model/xqmeng/CLIPalette-ep300/trained.pkl"
         }
     },
     "dataset": {

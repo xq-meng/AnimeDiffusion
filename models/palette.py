@@ -124,7 +124,7 @@ class Palette:
                 x_pils[i].save(output_path)
                 self._logger.info("Test output saved as {0}".format(output_path))
 
-    def fine_tune(self, epochs, data_loader, validations=[]):
+    def fine_tune(self, epochs, data_loader, validations=[], eta=1):
         utils.mkdir(self.status_save_dir)
         ep = 0
         while ep < epochs:
@@ -136,7 +136,7 @@ class Palette:
                 x_con = x_con.to(self.device)
                 with torch.no_grad():
                     noise = self.diffusion_model.unseen_transform(x_con[:, 1:, :, :]).to(self.device)
-                loss = self.diffusion_model.fine_tune(x=x_ref, x_t=noise, x_cond=x_con)
+                loss = self.diffusion_model.fine_tune(x=x_ref, x_t=noise, x_cond=x_con, eta=eta)
                 if step % 200 == 0:
                     self._logger.info("Fine tune epoch = %d, Loss = %f", ep, loss)
                 loss.backward()

@@ -10,7 +10,8 @@
         },
         "fine_tune": {
             "run": true,
-            "epochs": 10
+            "epochs": 10,
+            "eta": 0
         }
     },
     "components": {

@@ -89,4 +89,5 @@ if __name__ == '__main__':
                 validations.append(validation)
                 utils.mkdir(validation['output_dir'])
         # run trainer
-        model.fine_tune(epochs=config['tasks']['fine_tune']['epochs'], data_loader=train_data_loader, validations=validations)
+        ft_eta = config['tasks']['fine_tune']['eta'] if 'eta' in config['tasks']['fine_tune'] else 1
+        model.fine_tune(epochs=config['tasks']['fine_tune']['epochs'], data_loader=train_data_loader, validations=validations, eta=ft_eta)

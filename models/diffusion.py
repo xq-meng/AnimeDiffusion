@@ -119,10 +119,10 @@ class GaussianDiffusion(nn.Module):
         noise_tilde = self.denoise_fn(x_noisy, t)
         return self.loss_fn(noise, noise_tilde)
 
-    def fine_tune(self, x, x_t=None, x_cond=None):
+    def fine_tune(self, x, x_t=None, x_cond=None, eta=1):
         if x_t is None:
             x_t = torch.randn_like(x)
         assert x.shape == x_t.shape
         # ddim inference
-        x_tilde = self.inference_ddim(x_t, x_cond=x_cond)[-1]
+        x_tilde = self.inference_ddim(x_t, x_cond=x_cond, eta=eta)[-1]
         return self.loss_fn(x, x_tilde)

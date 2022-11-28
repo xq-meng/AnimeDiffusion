@@ -6,7 +6,10 @@
         },
         "test": {
             "run": false,
-            "output_dir": "/mnt/data1/DiffusionAnime/out/result"
+            "output_dir": "/mnt/data1/DiffusionAnime/out/result",
+            "use_ddim": true,
+            "sample_steps": 10,
+            "noise_init": false
         },
         "fine_tune": {
             "run": false,

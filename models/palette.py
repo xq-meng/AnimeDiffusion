@@ -62,9 +62,9 @@ class Palette:
         self._logger.info('Current epoch : %d', self.epoch)
         self._logger.info('Current loss : %f', self.loss)
 
-    def train(self, train_epochs, data_loader, validations=[]):
+    def train(self, epochs, data_loader, validations=[], **kwargs):
         utils.mkdir(self.status_save_dir)
-        while self.epoch < train_epochs:
+        while self.epoch < epochs:
             # train step
             for step, images in enumerate(data_loader):
                 self.optimizer.zero_grad()
@@ -102,29 +102,36 @@ class Palette:
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
 
-    def inference(self, x_con: torch.Tensor, eta=1, noise=None):
+    def inference(self, x_con: torch.Tensor, eta=1, noise=None, use_ddim=False, sample_steps=10):
         batch_size, _, h, w = x_con.shape
         if noise is None:
             noise = torch.randn((batch_size, self.noise_channel, h, w))
         noise = noise.to(self.device)
-        with torch.no_grad():
-            ret = self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
+        if use_ddim:
+            with torch.no_grad():
+                ret = self.diffusion_model.inference_ddim(noise, time_steps=sample_steps, x_cond=x_con, eta=eta)
+        else:
+            with torch.no_grad():
+                ret = self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
         return ret
 
-    def test(self, data_loader, output_dir):
+    def test(self, data_loader, output_dir, use_ddim=False, sample_steps=10, noise_init=True, **kwargs):
         for step, images in enumerate(data_loader):
             x_cons = images['condition']
             x_cons = x_cons.to(self.device)
-            with torch.no_grad():
-                x_noise = self.diffusion_model.unseen_transform(x_cons[:, 1:, :, :].to(self.device))
-            x_rets = self.inference(x_con=x_cons, noise=x_noise, eta=1)[-1]
+            if noise_init:
+                with torch.no_grad():
+                    x_noise = self.diffusion_model.unseen_transform(x_cons[:, 1:, :, :].to(self.device))
+            else:
+                x_noise = None
+            x_rets = self.inference(x_con=x_cons, noise=x_noise, eta=1, use_ddim=use_ddim, sample_steps=sample_steps)[-1]
             x_pils = utils.tensor2PIL(x_rets)
             for i, filename in enumerate(images['name']):
                 output_path = os.path.join(output_dir, 'ret_' + filename)
                 x_pils[i].save(output_path)
                 self._logger.info("Test output saved as {0}".format(output_path))
 
-    def fine_tune(self, epochs, data_loader, validations=[], eta=1):
+    def fine_tune(self, epochs, data_loader, validations=[], eta=1, **kwargs):
         utils.mkdir(self.status_save_dir)
         ep = 0
         while ep < epochs:

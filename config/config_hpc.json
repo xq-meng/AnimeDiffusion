@@ -6,7 +6,10 @@
         },
         "test": {
             "run": false,
-            "output_dir": "/output/result"
+            "output_dir": "/output/result",
+            "use_ddim": true,
+            "sample_steps": 10,
+            "noise_init": true
         },
         "fine_tune": {
             "run": false,

@@ -58,7 +58,7 @@ if __name__ == '__main__':
                 validations.append(validation)
                 utils.mkdir(validation['output_dir'])
         # run trainer
-        model.train(train_epochs=config['tasks']['train']['epochs'], data_loader=train_data_loader, validations=validations)
+        model.train(data_loader=train_data_loader, validations=validations, **config['tasks']['train'])
 
     # inference
     if 'test' in config['tasks'] and config['tasks']['test']['run'] == True:
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         test_data_loader = DataLoader(dataset=test_dataset, **config['dataset']['test']['dataloader'])
         utils.mkdir(config['tasks']['test']['output_dir'])
         # run test
-        model.test(data_loader=test_data_loader, output_dir=config['tasks']['test']['output_dir'])
+        model.test(data_loader=test_data_loader, **config['tasks']['test'])
 
     if 'fine_tune' in config['tasks'] and config['tasks']['fine_tune']['run'] == True:
         # training dataset
@@ -89,5 +89,4 @@ if __name__ == '__main__':
                 validations.append(validation)
                 utils.mkdir(validation['output_dir'])
         # run trainer
-        ft_eta = config['tasks']['fine_tune']['eta'] if 'eta' in config['tasks']['fine_tune'] else 1
-        model.fine_tune(epochs=config['tasks']['fine_tune']['epochs'], data_loader=train_data_loader, validations=validations, eta=ft_eta)
+        model.fine_tune(data_loader=train_data_loader, validations=validations, **config['tasks']['fine_tune'])

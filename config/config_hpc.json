@@ -11,7 +11,7 @@
         "fine_tune": {
             "run": false,
             "epochs": 20,
-            "eta": 0
+            "eta": 1
         }
     },
     "components": {
@@ -54,7 +54,7 @@
             }
         },
         "status": {
-            "save_epochs": 2,
+            "save_epochs": 1,
             "save_dir": "/output/status",
             "load_path": "/model/xqmeng/CLIPalette-ep300/trained.pkl"
         }

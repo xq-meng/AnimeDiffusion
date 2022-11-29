@@ -9,7 +9,7 @@
             "output_dir": "/mnt/data1/DiffusionAnime/out/result",
             "use_ddim": true,
             "sample_steps": 10,
-            "noise_init": false
+            "noise_init": true
         },
         "fine_tune": {
             "run": false,
@@ -59,7 +59,7 @@
         "status": {
             "save_epochs": 20,
             "save_dir": "/mnt/data1/DiffusionAnime/out/status",
-            "load_path": "/mnt/data1/DiffusionAnime/pretrained/ep200_ft10.pkl"
+            "load_path": "/mnt/data1/DiffusionAnime/pretrained/ep300_ft13.pkl"
         }
     },
     "dataset": {

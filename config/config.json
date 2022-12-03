@@ -53,13 +53,14 @@
                 "channel_in": 7,
                 "channel_out": 3,
                 "channel_mult": [1, 2, 4, 8],
-                "attention_head": 4
+                "attention_head": 4,
+                "cbam": true
             }
         },
         "status": {
             "save_epochs": 20,
             "save_dir": "/mnt/data1/DiffusionAnime/out/status",
-            "load_path": "/mnt/data1/DiffusionAnime/pretrained/ep300_ft10.pkl"
+            "load_path": ""
         }
     },
     "dataset": {

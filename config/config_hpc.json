@@ -53,7 +53,8 @@
                 "channel_in": 7,
                 "channel_out": 3,
                 "channel_mult": [1, 2, 4, 8],
-                "attention_head": 4
+                "attention_head": 4,
+                "cbam": true
             }
         },
         "status": {

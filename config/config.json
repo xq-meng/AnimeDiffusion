@@ -59,7 +59,7 @@
         "status": {
             "save_epochs": 20,
             "save_dir": "/mnt/data1/DiffusionAnime/out/status",
-            "load_path": "/mnt/data1/DiffusionAnime/pretrained/ep300_ft13.pkl"
+            "load_path": "/mnt/data1/DiffusionAnime/pretrained/ep300_ft10.pkl"
         }
     },
     "dataset": {
@@ -80,7 +80,7 @@
         "test": {
             "name": "anime",
             "path": {
-                "reference_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/random_reference",
+                "reference_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/one_reference",
                 "condition_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/condition"
             },
             "dataloader": {

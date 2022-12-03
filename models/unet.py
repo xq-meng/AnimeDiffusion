@@ -3,7 +3,7 @@ import torch.nn as nn
 import utils
 
 
-class SampleBlock(nn.Module):
+class SampleBlock(utils.Module):
 
     def __init__(
         self,
@@ -23,28 +23,6 @@ class SampleBlock(nn.Module):
         return self.sampling(x)
 
 
-class AttentionBlock(utils.Module):
-    def __init__(
-        self,
-        channels,
-        num_heads=1
-    ):
-        super().__init__()
-        self.channels = channels
-        self.num_heads = num_heads
-        self.attention = nn.Sequential(
-            nn.GroupNorm(32, self.channels),
-            nn.Conv1d(self.channels, self.channels * 3, 1),
-            utils.QKVAttention(self.num_heads)
-        )
-
-    def forward(self, x, t=None):
-        b, c, *spatial = x.shape
-        x = x.reshape(b, c, -1)
-        h = self.attention(x)
-        return (x + h).reshape(b, c, *spatial)
-
-
 class ResidualBlock(utils.Module):
 
     def __init__(
@@ -52,7 +30,8 @@ class ResidualBlock(utils.Module):
         channel_in,
         channel_out,
         time_channel=None,
-        dropout=0
+        dropout=0,
+        cbam=False
     ):
         super().__init__()
 
@@ -76,6 +55,9 @@ class ResidualBlock(utils.Module):
             nn.Dropout(p=dropout),
             nn.Conv2d(self.channel_out, self.channel_out, kernel_size=3, padding=1)
         )
+        self.attention = nn.Sequential(
+            utils.CBAM(self.channel_out)
+        ) if cbam else nn.Identity()
 
         # skip connection
         if self.channel_base == self.channel_out:
@@ -91,6 +73,7 @@ class ResidualBlock(utils.Module):
         h = self.conv1(x)
         if t is not None and self.time_emb is not None:
             h += self.time_emb(t)[:, :, None, None]
+        h = self.attention(h)
         h = self.conv2(h)
         return self.skip_connection(x) + h
 
@@ -105,9 +88,9 @@ class UNet(nn.Module):
         n_res_blocks=2,
         dropout=0,
         channel_mult={1, 2, 4, 8},
-        attention_head=4
+        attention_head=4,
+        cbam=True
     ):
-
         super().__init__()
 
         # member variables
@@ -149,7 +132,7 @@ class UNet(nn.Module):
         # bottomneck
         self.bottom_block = utils.Sequential(
             ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout),
-            AttentionBlock(ch, attention_head),
+            utils.RoussAttentionBlock(ch, attention_head),
             ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout)
         )
 
@@ -157,7 +140,7 @@ class UNet(nn.Module):
         self.decoder_block = nn.ModuleList()
         for l, mult in reversed(list(enumerate(channel_mult))):
             for _ in range(n_res_blocks):
-                self.decoder_block.append(ResidualBlock(ch + channel_sequence.pop(), mult * self.channel_base, time_channel=time_embedding_channel, dropout=dropout))
+                self.decoder_block.append(ResidualBlock(ch + channel_sequence.pop(), mult * self.channel_base, time_channel=time_embedding_channel, dropout=dropout, cbam=cbam))
                 ch = mult * self.channel_base
             if l > 0:
                 self.decoder_block.append(

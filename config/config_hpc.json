@@ -59,7 +59,7 @@
         "status": {
             "save_epochs": 1,
             "save_dir": "/output/status",
-            "load_path": "/model/xqmeng/CLIPalette-ep300/trained.pkl"
+            "load_path": ""
         }
     },
     "dataset": {

@@ -2,7 +2,7 @@
     "tasks": {
         "train": {
             "run": false,
-            "epochs": 200
+            "epochs": 500
         },
         "test": {
             "run": false,
@@ -60,7 +60,7 @@
         "status": {
             "save_epochs": 1,
             "save_dir": "/output/status",
-            "load_path": ""
+            "load_path": "/model/xqmeng/CLIPalette-ep300/trained.pkl"
         }
     },
     "dataset": {

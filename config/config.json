@@ -15,6 +15,13 @@
             "run": false,
             "epochs": 10,
             "eta": 1
+        },
+        "find_learning_rate": {
+            "run": false,
+            "lr_start": 1e-8,
+            "lr_end": 1e-3,
+            "beta": 0.98,
+            "lr_path": "/mnt/data1/DiffusionAnime/out/lr.csv"
         }
     },
     "components": {

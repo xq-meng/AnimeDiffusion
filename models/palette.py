@@ -1,4 +1,5 @@
 import os
+import csv
 import torch
 import utils
 from models.diffusion import GaussianDiffusion
@@ -163,3 +164,39 @@ class Palette:
         # save final status
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'ep_' + str(self.epoch).zfill(4) + '_ft_' + str(ep).zfill(4) + '.pkl'))
+
+    def find_lr(self, data_loader, lr_start, lr_end, beta=0.98, lr_path=None, **kwargs):
+        def adopt_lr(optimizer, lr):
+            for parameter_group in self.optimizer.param_groups:
+                parameter_group['lr'] = lr
+
+        rets = []
+        lr = lr_start
+        n = len(data_loader.dataset) // data_loader.batch_size
+        q = pow(lr_end / lr_start, 1.0 / n)
+        avg_loss = 0
+        for step, images in enumerate(data_loader):
+            self.optimizer.zero_grad()
+            adopt_lr(self.optimizer, lr)
+            x_ref = images['reference']
+            x_con = images['condition']
+            x_ref = x_ref.to(self.device)
+            x_con = x_con.to(self.device)
+            batch_size = x_ref.shape[0]
+            t = torch.randint(0, self.diffusion_model.time_steps, (batch_size, ), device=self.device).long()
+            loss = self.diffusion_model.train(x=x_ref, t=t, x_cond=x_con)
+            avg_loss = beta * avg_loss + (1 - beta) * loss
+            smoothed_loss = avg_loss / (1 - beta ** (step + 1))
+            self._logger.info("Step = %d, Loss = %f, Smoothed Loss: %f", step, loss, smoothed_loss)
+            rets.append([lr, loss, smoothed_loss])
+            loss.backward()
+            self.optimizer.step()
+            lr = lr * q
+
+        if lr_path is not None:
+            with open(lr_path, 'wb') as f:
+                csv_write = csv.writer(f)
+                csv_head = ["step", "loss", "smoothed_loss"]
+                csv_write.writerow(csv_head)
+                csv_write.writerows(rets)
+                f.close()

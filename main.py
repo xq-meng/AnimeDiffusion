@@ -90,3 +90,10 @@ if __name__ == '__main__':
                 utils.mkdir(validation['output_dir'])
         # run trainer
         model.fine_tune(data_loader=train_data_loader, validations=validations, **config['tasks']['fine_tune'])
+
+    if 'find_learning_rate' in config['tasks'] and config['tasks']['find_learning_rate']['run'] == True:
+        # training dataset
+        train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'], distortion_guidance=distortion_guidance)
+        train_data_loader = DataLoader(dataset=train_dataset ,**config['dataset']['train']['dataloader'])
+        # find lr
+        model.find_lr(data_loader=train_data_loader, **config['tasks']['find_learning_rate'])

@@ -194,7 +194,7 @@ class Palette:
             lr = lr * q
 
         if lr_path is not None:
-            with open(lr_path, 'wb') as f:
+            with open(lr_path, 'w') as f:
                 csv_write = csv.writer(f)
                 csv_head = ["step", "loss", "smoothed_loss"]
                 csv_write.writerow(csv_head)

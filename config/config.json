@@ -5,8 +5,8 @@
             "epochs": 500
         },
         "test": {
-            "run": false,
-            "output_dir": "/mnt/data1/DiffusionAnime/out/result",
+            "run": true,
+            "output_dir": "/mnt/data1/output/DiffusionAnime/out/result",
             "use_ddim": true,
             "sample_steps": 10,
             "noise_init": true
@@ -21,7 +21,7 @@
             "lr_start": 1e-8,
             "lr_end": 1e-3,
             "beta": 0.98,
-            "lr_path": "/mnt/data1/DiffusionAnime/out/lr.csv"
+            "lr_path": "/mnt/data1/output/DiffusionAnime/out/lr.csv"
         }
     },
     "components": {
@@ -29,14 +29,14 @@
     },
     "validations": [
         {
-            "image_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/condition/1.jpg",
-            "distortion_guidance": "/mnt/data1/DiffusionAnime/dataset/Anime/test/reference/1.jpg",
-            "output_dir": "/mnt/data1/DiffusionAnime/out/validation"
+            "image_path": "/mnt/data1/output/DiffusionAnime/dataset/Anime/test/condition/1.jpg",
+            "distortion_guidance": "/mnt/data1/output/DiffusionAnime/dataset/Anime/test/reference/1.jpg",
+            "output_dir": "/mnt/data1/output/DiffusionAnime/out/validation"
         },
         {
-            "image_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/condition/1.jpg",
-            "distortion_guidance": "/mnt/data1/DiffusionAnime/dataset/Anime/test/reference/2.jpg",
-            "output_dir": "/mnt/data1/DiffusionAnime/out/validation"
+            "image_path": "/mnt/data1/output/DiffusionAnime/dataset/Anime/test/condition/1.jpg",
+            "distortion_guidance": "/mnt/data1/output/DiffusionAnime/dataset/Anime/test/reference/2.jpg",
+            "output_dir": "/mnt/data1/output/DiffusionAnime/out/validation"
         }
     ],
     "model": {
@@ -66,16 +66,16 @@
         },
         "status": {
             "save_epochs": 20,
-            "save_dir": "/mnt/data1/DiffusionAnime/out/status",
-            "load_path": "/mnt/data1/DiffusionAnime/pretrained/ep300.pkl"
+            "save_dir": "/mnt/data1/output/DiffusionAnime/out/status",
+            "load_path": "/mnt/data1/output/DiffusionAnime/pretrained/ep300_ft10.pkl"
         }
     },
     "dataset": {
         "train": {
             "name": "anime",
             "path": {
-                "reference_path": "/mnt/data1/DiffusionAnime/dataset/Anime/train/reference",
-                "condition_path": "/mnt/data1/DiffusionAnime/dataset/Anime/train/condition"
+                "reference_path": "/mnt/data1/dataset/Anime/train/reference",
+                "condition_path": "/mnt/data1/dataset/Anime/train/condition"
             },
             "dataloader": {
                 "batch_size": 4,
@@ -88,8 +88,8 @@
         "test": {
             "name": "anime",
             "path": {
-                "reference_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/one_reference",
-                "condition_path": "/mnt/data1/DiffusionAnime/dataset/Anime/test/condition"
+                "reference_path": "/mnt/data1/dataset/Anime/test/one2one/one_reference/one_reference_573",
+                "condition_path": "/mnt/data1/dataset/Anime/test/one2one/one_condition/one_condition_576"
             },
             "dataloader": {
                 "batch_size": 1,
@@ -102,6 +102,6 @@
     },
     "logging": {
         "console": true,
-        "logfile": "/mnt/data1/DiffusionAnime/out/log/clipalette.log"
+        "logfile": "/mnt/data1/output/DiffusionAnime/out/log/clipalette.log"
     }
 }

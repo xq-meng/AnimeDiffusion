@@ -44,6 +44,8 @@ class ColorizationDataset(Dataset):
         if self.distortion_guidance:
             img_distortion = utils.warp_image(img_reference)
             ret['condition'] = torch.cat([ret['condition'], self.tf_reference(img_distortion)], dim=0)
+        else:
+            ret['condition'] = torch.cat([ret['condition'], ret['reference']], dim=0)
         return ret
 
     def __len__(self):

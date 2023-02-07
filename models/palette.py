@@ -31,7 +31,7 @@ class Palette:
         self.ema = utils.ema(self.diffusion_model.denoise_fn, self.ema_decay)
         self.ema.register()
         # logger
-        self._logger = logger if logger is not None else utils.logger()
+        self._logger = logger if logger is not None else utils.Logger()
         # status save directory
         self.status_save_epochs = args['status']['save_epochs']
         self.status_save_dir = args['status']['save_dir']
@@ -103,7 +103,7 @@ class Palette:
         if self.status_save_dir is not None:
             self.save_status(os.path.join(self.status_save_dir, 'trained.pkl'))
 
-    def inference(self, x_con: torch.Tensor, eta=1, noise=None, use_ddim=False, sample_steps=10):
+    def inference(self, x_con: torch.Tensor, eta=1, noise=None, use_ddim=True, sample_steps=10, **kwargs):
         batch_size, _, h, w = x_con.shape
         if noise is None:
             noise = torch.randn((batch_size, self.noise_channel, h, w))
@@ -115,14 +115,15 @@ class Palette:
             with torch.no_grad():
                 ret = self.diffusion_model.inference(noise, x_cond=x_con, eta=eta)
         return ret
-
-    def test(self, data_loader, output_dir, use_ddim=False, sample_steps=10, noise_init=True, **kwargs):
+    
+    def test(self, data_loader, output_dir, use_ddim=False, sample_steps=10, noise_init=True, forward_step=500, **kwargs):
         for step, images in enumerate(data_loader):
             x_cons = images['condition']
             x_cons = x_cons.to(self.device)
             if noise_init:
                 with torch.no_grad():
-                    x_noise = self.diffusion_model.unseen_transform(x_cons[:, 1:, :, :].to(self.device))
+                    x_noise = self.forward_noising(x_con=x_cons, t=forward_step)
+                    # x_noise = self.diffusion_model.unseen_transform(x_cons[:, 1:, :, :].to(self.device))
             else:
                 x_noise = None
             x_rets = self.inference(x_con=x_cons, noise=x_noise, eta=1, use_ddim=use_ddim, sample_steps=sample_steps)[-1]
@@ -200,3 +201,8 @@ class Palette:
                 csv_write.writerow(csv_head)
                 csv_write.writerows(rets)
                 f.close()
+
+    def forward_noising(self, x_con, t, ratio=0.9):
+        x_noise = ratio * x_con[:, 1:, :, :] + (1 - ratio) * x_con[:, :1, :, :]
+        x_noise = self.diffusion_model.unseen_transform(x_noise, t=t)
+        return x_noise

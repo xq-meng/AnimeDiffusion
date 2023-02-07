@@ -10,6 +10,7 @@ class Logger(object):
         level='debug',
         console=True,
         logfile='',
+        handler=None,
         format='[%(asctime)s][%(levelname)s] %(message)s',
         datefmt='%m/%d/%Y %H:%M:%S'
     ):
@@ -38,6 +39,10 @@ class Logger(object):
             logfile_handler = logging.FileHandler(filename=logfile, encoding='utf-8')
             logfile_handler.setFormatter(logfmt)
             self._logger.addHandler(logfile_handler)
+
+        if handler is not None:
+            handler.setFormatter(logfmt)
+            self._logger.addHandler(handler)
 
     def debug(self, msg, *args, **kwargs):
         return self._logger.debug(msg, *args, **kwargs)

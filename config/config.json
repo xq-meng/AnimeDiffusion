@@ -9,7 +9,8 @@
             "output_dir": "/mnt/data1/output/DiffusionAnime/out/result",
             "use_ddim": true,
             "sample_steps": 10,
-            "noise_init": true
+            "noise_init": true,
+            "forward_step": 500
         },
         "fine_tune": {
             "run": false,
@@ -25,7 +26,7 @@
         }
     },
     "components": {
-        "distortion_guidance": true
+        "distortion_guidance": false
     },
     "validations": [
         {
@@ -88,8 +89,8 @@
         "test": {
             "name": "anime",
             "path": {
-                "reference_path": "/mnt/data1/dataset/Anime/test/one2one/one_reference/one_reference_573",
-                "condition_path": "/mnt/data1/dataset/Anime/test/one2one/one_condition/one_condition_576"
+                "reference_path": "/mnt/data1/dataset/Anime/test/one2one/one_reference/one_reference_509",
+                "condition_path": "/mnt/data1/dataset/Anime/test/one2one/one_condition/one_condition_508"
             },
             "dataloader": {
                 "batch_size": 1,

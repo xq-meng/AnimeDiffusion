@@ -46,6 +46,11 @@ class ModelRunner(QObject):
         self.__load_checkpoint_done_signal__.emit()
 
     def inference(self, filename):
+        # input image checking
+        if len(self.sketch.split()) > 1:
+            self.logger.warning(f'There are {len(self.sketch.split())} channels in line drawing image.')
+            self.sketch = self.sketch.convert('L')
+
         reference = Image.open(filename).convert('RGB')
         ref_tsr = self.tf_reference(utils.warp_image(reference)).unsqueeze(0)
         skt_tsr = self.tf_condition(self.sketch).unsqueeze(0)
@@ -57,4 +62,4 @@ class ModelRunner(QObject):
         x_pil = utils.tensor2PIL(x_ret)
         self.result = x_pil[0]
         self.__inference_done_signal__.emit()
-        self.logger.info(f'Inference finished, time cost: {time_e - time_s}s')
+        self.logger.info(f'Inference finished, time cost: {(time_e - time_s):.4f}s')

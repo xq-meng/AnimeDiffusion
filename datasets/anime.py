@@ -36,7 +36,7 @@ class ColorizationDataset(Dataset):
         ret = {}
         filename = self.filenames[index]
         img_reference = Image.open(os.path.join(self.reference_path, filename))
-        img_condition = Image.open(os.path.join(self.condition_path, filename))
+        img_condition = Image.open(os.path.join(self.condition_path, filename)).convert('L')
         ret['reference'] = self.tf_reference(img_reference)
         ret['condition'] = self.tf_condition(img_condition)
         ret['name'] = filename

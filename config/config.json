@@ -89,8 +89,8 @@
         "test": {
             "name": "anime",
             "path": {
-                "reference_path": "/mnt/data1/dataset/Anime/test/one2one/one_reference/one_reference_140",
-                "condition_path": "/mnt/data1/dataset/Anime/test/one2one/one_condition/one_condition_137"
+                "reference_path": "/mnt/data1/dataset/Anime/test/5t5/reference_3/",
+                "condition_path": "/mnt/data1/dataset/Anime/test/5t5/condition/"
             },
             "dataloader": {
                 "batch_size": 1,

@@ -208,7 +208,7 @@ class AnimeUI(QMainWindow):
 
     def __open_condition_image_file__(self):
         dir = self.last_sketch_dir if self.last_sketch_dir else os.getcwd()
-        filename, _ = QFileDialog.getOpenFileName(self, 'Select image', dir, 'Image Files (*.jpg)')
+        filename, _ = QFileDialog.getOpenFileName(self, 'Select image', dir, 'JPEG Files (*.jpg);;PNG Files (*.png)')
         if filename:
             self.sketch_image = Image.open(filename)
             self.sketch_filename = filename
@@ -219,7 +219,7 @@ class AnimeUI(QMainWindow):
 
     def __open_reference_image_file__(self):
         dir = self.last_reference_dir if self.last_reference_dir else os.getcwd()
-        filename, _ = QFileDialog.getOpenFileName(self, 'Select image', dir, 'Image Files (*.jpg)')
+        filename, _ = QFileDialog.getOpenFileName(self, 'Select image', dir, 'JPEG Files (*.jpg);;PNG Files (*.png)')
         if filename:
             self.__append_reference_candidate__(filename=filename)
             self.last_reference_dir, _ = os.path.split(filename)

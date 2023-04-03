@@ -1,0 +1,107 @@
+{
+    "tasks": {
+        "train_anime_diffusion": {
+            "run": false,
+            "name": "TrainAnimeDiffusion",
+            "global_rank": 1,
+            "model": "anime_diffusion",
+            "optim": "AdamW_WDK",
+            "datas": "anime",
+            "logger": "baselogger",
+            "start_epoch": 0,
+            "target_epoch": 200,
+            "checkpoint_dir": "/mnt/data1/output/ADF/out/checkpoints/pt/",
+            "checkpoint_epoch": 5,
+            "logging_step": 100
+        },
+        "finetune_anime_diffusion": {
+            "run": false,
+            "name": "FineTuneAnimeDiffusion",
+            "eta": 0,
+            "global_rank": 1,
+            "model": "anime_diffusion",
+            "optim": "AdamW_WDK",
+            "datas": "anime",
+            "logger": "baselogger",
+            "start_epoch": 0,
+            "target_epoch": 10,
+            "checkpoint_dir": "/mnt/data1/output/ADF/out/checkpoints/ft/",
+            "checkpoint_epoch": 1,
+            "logging_step": 10
+        },
+        "test_anime_diffusion": {
+            "run": false,
+            "name": "TestAnimeDiffusion",
+            "global_rank": 1,
+            "model": "anime_diffusion",
+            "datas": "anime_test",
+            "output_dir": "/mnt/data1/output/ADF/out/result/"
+        },
+        "gui_anime_diffusion": {
+            "run": true,
+            "name": "gui.GUI_ADF",
+            "global_rank": 1,
+            "distributed": false,
+            "model": "anime_diffusion"
+        }
+    },
+    "model": {
+        "anime_diffusion": {
+            "name": "GaussianDiffusion",
+            "time_step": 1000,
+            "betas": {
+                "linear_start": 1e-6,
+                "linear_end": 1e-2
+            },
+            "unet": {
+                "channel_in": 7,
+                "channel_out": 3,
+                "channel_mult": [1, 2, 4, 8],
+                "attention_head": 4,
+                "cbam": false
+            },
+            "checkpoint": "/mnt/data1/output/ADF/pretrained/ADF300_10.pth"
+        }
+    },
+    "optim": {
+        "AdamW_WDK": {
+            "name": "AdamW",
+            "lr": 1e-4,
+            "min_lr": 1e-8,
+            "warmup_epochs": 1,
+            "weight_decay": 0.01
+        }
+    },
+    "datas": {
+        "anime": {
+            "name": "Anime",
+            "reference_path": "/mnt/data1/dataset/Anime/train/reference/",
+            "condition_path": "/mnt/data1/dataset/Anime/train/condition/",
+            "size": 256,
+            "torch_dtype": "float32",
+            "batch_size": 1,
+            "num_workers": 1,
+            "shuffle": false,
+            "pin_memory": true,
+            "drop_last": true
+        },
+        "anime_test": {
+            "name": "Anime",
+            "reference_path": "/mnt/data1/dataset/Anime/test/reconstruction/reference/",
+            "condition_path": "/mnt/data1/dataset/Anime/test/reconstruction/condition/",
+            "size": 256,
+            "torch_dtype": "float32",
+            "batch_size": 1,
+            "num_workers": 1,
+            "shuffle": false,
+            "pin_memory": true,
+            "drop_last": true
+        }
+    },
+    "logger": {
+        "baselogger": {
+            "console": true,
+            "logdir": "/mnt/data1/output/ADF/out/log/"
+        }
+    }
+}

@@ -1,0 +1,1 @@
+from data.anime import Anime

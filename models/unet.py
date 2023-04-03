@@ -1,9 +1,12 @@
 import torch
 import torch.nn as nn
-import utils
+from models.components.xt_module import Module, Sequential
+from models.components.time_embedding import time_embedding
+from models.components.rouss_attention import RoussAttentionBlock
+from models.components.cbam import CBAM
 
 
-class SampleBlock(utils.Module):
+class SampleBlock(Module):
 
     def __init__(
         self,
@@ -23,7 +26,7 @@ class SampleBlock(utils.Module):
         return self.sampling(x)
 
 
-class ResidualBlock(utils.Module):
+class ResidualBlock(Module):
 
     def __init__(
         self,
@@ -56,7 +59,7 @@ class ResidualBlock(utils.Module):
             nn.Conv2d(self.channel_out, self.channel_out, kernel_size=3, padding=1)
         )
         self.attention = nn.Sequential(
-            utils.CBAM(self.channel_out)
+            CBAM(self.channel_out)
         ) if cbam else nn.Identity()
 
         # skip connection
@@ -109,7 +112,7 @@ class UNet(nn.Module):
         )
 
         # input block
-        self.input = utils.Sequential(
+        self.input = Sequential(
             nn.Conv2d(self.channel_in, self.channel_base, kernel_size=1)
         )
         channel_sequence = [channel_base]
@@ -130,9 +133,9 @@ class UNet(nn.Module):
                 channel_sequence.append(ch)
 
         # bottomneck
-        self.bottom_block = utils.Sequential(
+        self.bottom_block = Sequential(
             ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout),
-            utils.RoussAttentionBlock(ch, attention_head),
+            RoussAttentionBlock(ch, attention_head),
             ResidualBlock(ch, ch, time_channel=time_embedding_channel, dropout=dropout)
         )
 
@@ -144,7 +147,7 @@ class UNet(nn.Module):
                 ch = mult * self.channel_base
             if l > 0:
                 self.decoder_block.append(
-                    utils.Sequential(
+                    Sequential(
                         ResidualBlock(ch + channel_sequence.pop(), mult * self.channel_base, time_channel=time_embedding_channel, dropout=dropout),
                         SampleBlock(sampling_type="up")
                     )
@@ -159,7 +162,7 @@ class UNet(nn.Module):
         )
 
     def forward(self, x, t=None):
-        t_emb = self.time_embedding(utils.time_embedding(t, self.channel_base)) if t is not None else None
+        t_emb = self.time_embedding(time_embedding(t, self.channel_base)) if t is not None else None
         h = self.input(x, t)
         ht = [h]
         for module in self.encoder_block:

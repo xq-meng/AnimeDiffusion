@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import math
-from .module import *
 
 
 class QKVAttention(nn.Module):

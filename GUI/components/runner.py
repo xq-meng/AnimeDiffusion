@@ -1,10 +1,10 @@
-from PyQt6.QtCore import QObject, QThread, pyqtSignal
+from PyQt6.QtCore import QObject, pyqtSignal
 import time
 import torch
 from torchvision import transforms
 from PIL import Image
-from models.palette import Palette
-import utils
+from base.model_handler import ModelHandler
+from utils.image import warp_image, tensor2PIL, XDoG
 
 
 class ModelRunner(QObject):
@@ -14,11 +14,16 @@ class ModelRunner(QObject):
     __inference_start_signal__ = pyqtSignal(str)
     __inference_done_signal__ = pyqtSignal()
 
-    def __init__(self, config=None, logger=None):
+    def __init__(
+        self,
+        model_option=None,
+        logger=None,
+        **kwargs
+    ):
         super(ModelRunner, self).__init__()
-        self.config = config
+        self.model_option = model_option
         self.logger = logger
-        self.model = None
+        self.model_handler = None
         self.path_to_checkpoint = ''
         self.result = None
         self.sketch = None
@@ -32,34 +37,36 @@ class ModelRunner(QObject):
         ])
 
     def init_model(self):
-        if not self.config:
+        if not self.model_option:
             return
-        self.model = Palette(self.config['model'], logger=self.logger)
-        if 'load_path' in self.config['model']['status'] and self.config['model']['status']['load_path']:
-            self.path_to_checkpoint = self.config['model']['status']['load_path']
-            self.__load_checkpoint_done_signal__.emit()
+        self.model_handler = ModelHandler(**self.model_option)
+        self.xdog = XDoG()
+        self.device = self.model_handler.device
         self.__init_model_done_signal__.emit()
 
     def load_checkpoint(self, filename):
-        self.model.load_status(filename)
+        self.model_handler.load_checkpoint(filename)
         self.path_to_checkpoint = filename
         self.__load_checkpoint_done_signal__.emit()
 
-    def inference(self, filename):
-        # input image checking
-        if len(self.sketch.split()) > 1:
-            self.logger.warning(f'There are {len(self.sketch.split())} channels in line drawing image.')
-            self.sketch = self.sketch.convert('L')
+    def set_sketch(self, image):
+        self.sketch = self.xdog(image.convert('RGB')).convert('L')
 
+    def inference(self, filename):
+        # input image
         reference = Image.open(filename).convert('RGB')
-        ref_tsr = self.tf_reference(utils.warp_image(reference)).unsqueeze(0)
-        skt_tsr = self.tf_condition(self.sketch).unsqueeze(0)
+        # to tensor
+        x_ref = self.tf_reference(warp_image(reference)).unsqueeze(0).to(self.device)
+        x_con = self.tf_condition(self.sketch).unsqueeze(0).to(self.device)
+        # denoising ddim
         self.__inference_start_signal__.emit('Infering...')
         time_s = time.time()
-        x_con = torch.cat([skt_tsr, ref_tsr], dim=1).to(self.model.device)
-        x_ret = self.model.inference(x_con=x_con)[-1]
+        with torch.no_grad():
+            noise = torch.randn_like(x_ref).to(self.device)
+            x_ret = self.model_handler.model.inference_ddim(x_t=noise, x_cond=torch.cat([x_con, x_ref], dim=1))[-1]
         time_e = time.time()
-        x_pil = utils.tensor2PIL(x_ret)
+        # output result
+        x_pil = tensor2PIL(x_ret)
         self.result = x_pil[0]
         self.__inference_done_signal__.emit()
         self.logger.info(f'Inference finished, time cost: {(time_e - time_s):.4f}s')

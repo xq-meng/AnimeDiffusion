@@ -3,7 +3,8 @@ import random
 import numpy as np
 import cv2
 from PIL import Image
-import utils.thinplate as tps
+import utils.image.thinplate as tps
+
 
 def warp_image(image):
     """
@@ -24,4 +25,5 @@ def warp_image(image):
     grids = tps.tps_grid(theta, c_dst, arr.shape)
     mapx, mapy = tps.tps_grid_to_remap(grids, arr.shape)
     warped_arr = cv2.remap(arr, mapx, mapy, cv2.INTER_CUBIC)
-    return Image.fromarray(warped_arr).rotate(random.randrange(360)).resize(image.size)
+    # return Image.fromarray(warped_arr).rotate(random.randrange(360)).resize(image.size)
+    return Image.fromarray(warped_arr)

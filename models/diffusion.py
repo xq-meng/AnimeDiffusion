@@ -4,24 +4,32 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from models.unet import UNet
-import utils
+
+
+def extract(a, t, x_shape):
+    batch_size = t.shape[0]
+    out = a.to(t.device).gather(0, t).float()
+    out = out.reshape(batch_size, *((1,) * (len(x_shape) - 1)))
+    return out
 
 
 class GaussianDiffusion(nn.Module):
 
     def __init__(
         self,
-        args,
+        time_step,
+        betas,
+        unet,
     ):
         super().__init__()
 
         # member variables
-        self.denoise_fn = UNet(**args['unet'])
-        self.time_steps = args['time_step']
+        self.denoise_fn = UNet(**unet)
+        self.time_steps = time_step
 
         # parameters
         scale = 1000 / self.time_steps
-        betas = torch.linspace(scale * args['betas']['linear_start'], scale * args['betas']['linear_end'], self.time_steps, dtype=torch.float32)
+        betas = torch.linspace(scale * betas['linear_start'], scale * betas['linear_end'], self.time_steps, dtype=torch.float32)
         alphas = 1. - betas
         gammas = torch.cumprod(alphas, axis=0)
         gammas_prev = F.pad(gammas[:-1], (1, 0), value=1.)
@@ -44,16 +52,16 @@ class GaussianDiffusion(nn.Module):
     def q_sample(self, x_0, t, noise=None):
         if noise is None:
             noise = torch.randn_like(x_0)
-        gammas_t = utils.extract(self.gammas, t, x_shape=x_0.shape).to(x_0.device)
+        gammas_t = extract(self.gammas, t, x_shape=x_0.shape).to(x_0.device)
         return torch.sqrt(gammas_t) * x_0 + torch.sqrt(1 - gammas_t) * noise
 
     @torch.no_grad()
     def p_sample(self, x_t, t, x_cond=None, eta=1):
         predicted_noise = self.denoise_fn(x_t, t) if x_cond is None else self.denoise_fn(torch.cat([x_t, x_cond], dim=1), t)
-        predicted_x_0 = utils.extract(self.sqrt_reciprocal_gammas, t, x_t.shape) * x_t - utils.extract(self.sqrt_reciprocal_gammas_m1, t, x_t.shape) * predicted_noise
+        predicted_x_0 = extract(self.sqrt_reciprocal_gammas, t, x_t.shape) * x_t - extract(self.sqrt_reciprocal_gammas_m1, t, x_t.shape) * predicted_noise
         predicted_x_0 = torch.clamp(predicted_x_0, min=-1., max=1.)
-        posterior_mean = utils.extract(self.posterior_mean_coef1, t, x_t.shape) * predicted_x_0 + utils.extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
-        posterior_log_variance = utils.extract(self.posterior_log_variance, t, x_t.shape)
+        posterior_mean = extract(self.posterior_mean_coef1, t, x_t.shape) * predicted_x_0 + extract(self.posterior_mean_coef2, t, x_t.shape) * x_t
+        posterior_log_variance = extract(self.posterior_log_variance, t, x_t.shape)
         noise = torch.randn_like(x_t)
         nonzero_mask = eta * ((t != 0).float().view(-1, *([1] * (len(x_t.shape) - 1))))
         pred_x = posterior_mean + nonzero_mask * (0.5 * posterior_log_variance).exp() * noise
@@ -79,8 +87,8 @@ class GaussianDiffusion(nn.Module):
         for i in reversed(range(0, time_steps)):
             t = torch.full((batch_size, ), step_sequence[i], device=device, dtype=torch.long)
             prev_t = torch.full((batch_size, ), step_sequence_prev[i], device=device, dtype=torch.long)
-            gammas_t = utils.extract(self.gammas, t, x_shape=x_t.shape)
-            gammas_prev_t = utils.extract(self.gammas, prev_t, x_shape=x_t.shape)
+            gammas_t = extract(self.gammas, t, x_shape=x_t.shape)
+            gammas_prev_t = extract(self.gammas, prev_t, x_shape=x_t.shape)
             predicted_noise = self.denoise_fn(x_t, t) if x_cond is None else self.denoise_fn(torch.cat([x_t, x_cond], dim=1), t)
             predicted_x_0 = (x_t - torch.sqrt(1. - gammas_t) * predicted_noise) / torch.sqrt(gammas_t)
             predicted_x_0 = torch.clamp(predicted_x_0, min=-1., max=1.)
@@ -96,12 +104,35 @@ class GaussianDiffusion(nn.Module):
     def unseen_transform(self, x_0, t):
         batch_size = x_0.shape[0]
         t = t * torch.ones(batch_size).long()
-        gammas_t = utils.extract(self.gammas, t, x_shape=x_0.shape).to(x_0.device)
+        gammas_t = extract(self.gammas, t, x_shape=x_0.shape).to(x_0.device)
         noise = torch.randn_like(x_0)
         x_noise = torch.sqrt(gammas_t) * x_0 + torch.sqrt(1 - gammas_t) * noise
         return x_noise
 
-    def train(self, x, t, x_cond=None):
+    @torch.no_grad()
+    def fix_forward(self, x_0, time_steps=10, x_cond=None):
+        step_sequence_next = np.asarray(list(range(0, self.time_steps, self.time_steps // time_steps)))
+        step_sequence_next = step_sequence_next + 1
+        step_sequence = np.append(np.array([0]), step_sequence_next[:-1])
+        batch_size = x_0.shape[0]
+        device = next(self.parameters()).device
+        for i in range(0, time_steps):
+            t = torch.full((batch_size, ), step_sequence[i], device=device, dtype=torch.long)
+            next_t = torch.full((batch_size, ), step_sequence_next[i], device=device, dtype=torch.long)
+            gammas_t = extract(self.gammas, t, x_shape=x_0.shape)
+            gammas_next_t = extract(self.gammas, next_t, x_shape=x_0.shape)
+            if i != 0:
+                predicted_noise = self.denoise_fn(x_t, t) if x_cond is None else self.denoise_fn(torch.cat([x_t, x_cond], dim=1))
+                predicted_x_0 = (x_t - torch.sqrt(1. - gammas_t) * predicted_noise) / torch.sqrt(gammas_t)
+                predicted_x_0 = torch.clamp(predicted_x_0, min=-1., max=1.)
+            else:
+                predicted_noise = torch.randn_like(x_0)
+                predicted_x_0 = x_0
+            predicted_x_t_direction = torch.sqrt(1. - gammas_next_t) * predicted_noise
+            x_t = torch.sqrt(gammas_next_t) * predicted_x_0 + predicted_x_t_direction
+        return x_t
+
+    def forward(self, x, t, x_cond=None):
         """
         :param[in]  x       torch.Tensor    [batch_size x channel x height x weight]
         :param[in]  t       torch.Tensor    [batch_size]

@@ -3,14 +3,14 @@ import torch.nn as nn
 
 
 class Module(nn.Module):
-    
+
     @abstractmethod
     def forward(self, x, t):
         raise NotImplemented
 
-        
+
 class Sequential(nn.Sequential, Module):
-    
+
     @abstractmethod
     def forward(self, x, t):
         for layer in self:

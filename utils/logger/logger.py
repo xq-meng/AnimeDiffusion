@@ -1,15 +1,17 @@
+import os
 import logging
-from .path import *
+import utils.path
 
 
 class Logger(object):
 
     def __init__(
         self,
-        name=None,
-        level='debug',
+        name='base',
+        level='info',
         console=True,
         logfile='',
+        logdir='',
         handler=None,
         format='[%(asctime)s][%(levelname)s] %(message)s',
         datefmt='%m/%d/%Y %H:%M:%S'
@@ -26,20 +28,21 @@ class Logger(object):
         self._logger = logging.getLogger(name=name)
         self._logger.setLevel(self.level_mapping.get(level))
         logfmt = logging.Formatter(fmt=format, datefmt=datefmt)
-
         # output to console
         if console:
             console_handler = logging.StreamHandler()
             console_handler.setFormatter(logfmt)
             self._logger.addHandler(console_handler)
-
+        # output to log dir
+        if logdir and not logfile:
+            logfile = os.path.join(logdir, name + '.log')
         # output to logfile
-        if len(logfile) > 0:
-            create_prefix_dir(logfile)
+        if logfile:
+            utils.path.create_prefix_dir(logfile)
             logfile_handler = logging.FileHandler(filename=logfile, encoding='utf-8')
             logfile_handler.setFormatter(logfmt)
             self._logger.addHandler(logfile_handler)
-
+        # output to handler
         if handler is not None:
             handler.setFormatter(logfmt)
             self._logger.addHandler(handler)

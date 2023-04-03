@@ -1,99 +1,69 @@
-import os
 import argparse
 import json
 import torch
-from torch.utils.data import DataLoader
-from PIL import Image
-import utils
-from models.palette import Palette
-import datasets
+import torch.distributed
+import torch.multiprocessing
+import process
+import utils.pythonic
+
+
+def main_worker(local_rank, global_rank, task_option, config):
+    # distribute config
+    if local_rank >= 0 and task_option.get('distributed', True):
+        torch.cuda.set_device(local_rank)
+        torch.distributed.init_process_group(backend='nccl',
+                                             init_method='tcp://127.0.0.1:23456',
+                                             world_size=global_rank,
+                                             rank=local_rank)
+
+    task_name = task_option.get('name')
+    task_object = utils.pythonic.get_attributes(process, task_name)
+    if not task_object:
+        return
+
+    task_kwargs = {}
+    model_name = task_option.get('model')
+    if model_name:
+        task_kwargs['model_option'] = config['model'][model_name]
+        task_kwargs['model_option']['distributed_parallel'] = task_option.get('distributed', True)
+        task_option.pop('model')
+    optim_name = task_option.get('optim')
+    if optim_name:
+        task_kwargs['optim_option'] = config['optim'][optim_name]
+        task_option.pop('optim')
+    datas_name = task_option.get('datas')
+    if datas_name:
+        task_kwargs['datas_option'] = config['datas'][datas_name]
+        task_option.pop('datas')
+    logger_name = task_option.get('logger')
+    if logger_name:
+        task_kwargs['logger_option'] = config['logger'][logger_name]
+        task_option.pop('logger')
+
+    task = task_object(**task_option, **task_kwargs, local_rank=local_rank)
+    task.run()
+
+    # distribute barrier
+    if global_rank > 1:
+        torch.distributed.barrier()
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description='Siamese Diffusion.')
     parser.add_argument('-c', '--config', type=str, required=True)
-    parser.add_argument('-x', '--update', type=json.loads, default=None)
     args = parser.parse_args()
 
-    try:
-        with open(args.config, 'r') as fr:
-            config = json.load(fr)
-    except FileNotFoundError:
-        print("No such file: {}".format(args.config))
-        exit()
-    except PermissionError:
-        print("Unable to access: {}".format(args.config))
-        exit()
+    with open(args.config, 'r') as fr:
+        config = json.load(fr)
 
-    # update config with command line input
-    utils.update_config(config=config, enhance_parse=args.update)
+    for task_key, task_option in config['tasks'].items():
+        if not task_option['run']:
+            continue
+        global_rank = min(task_option['global_rank'], torch.cuda.device_count())
+        distributed = task_option.get('distributed', True)
+        task_option['global_rank'] = global_rank
 
-    # logger initialize
-    logger = utils.Logger(name='base_logger', **config['logging'])
-
-    # guidance definition
-    distortion_guidance = config['components']['distortion_guidance']
-
-    # palette
-    model = Palette(config['model'], logger=logger)
-
-    # train
-    if 'train' in config['tasks'] and config['tasks']['train']['run'] == True:
-        # training dataset
-        train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'], distortion_guidance=distortion_guidance)
-        train_data_loader = DataLoader(dataset=train_dataset ,**config['dataset']['train']['dataloader'])
-        # validation
-        validations = []
-        if 'validations' in config:
-            for validation_config in config['validations']:
-                validation = {}
-                val_img = Image.open(validation_config['image_path'])
-                validation['condition'] = utils.PIL2tensor(val_img)
-                if distortion_guidance:
-                    val_distortion = Image.open(validation_config['distortion_guidance'])
-                    validation['condition'] = torch.cat([validation['condition'], utils.PIL2tensor(val_distortion)], dim=1)
-                validation['filename'] = os.path.basename(validation_config['image_path'])
-                validation['postfix'] = os.path.splitext(validation_config['image_path'])[-1]
-                validation['output_dir'] = validation_config['output_dir']
-                validations.append(validation)
-                utils.mkdir(validation['output_dir'])
-        # run trainer
-        model.train(data_loader=train_data_loader, validations=validations, **config['tasks']['train'])
-
-    # inference
-    if 'test' in config['tasks'] and config['tasks']['test']['run'] == True:
-        # testing dataset
-        test_dataset = datasets.ColorizationDataset(**config['dataset']['test']['path'], distortion_guidance=distortion_guidance)
-        test_data_loader = DataLoader(dataset=test_dataset, **config['dataset']['test']['dataloader'])
-        utils.mkdir(config['tasks']['test']['output_dir'])
-        # run test
-        model.test(data_loader=test_data_loader, **config['tasks']['test'])
-
-    if 'fine_tune' in config['tasks'] and config['tasks']['fine_tune']['run'] == True:
-        # training dataset
-        train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'], distortion_guidance=distortion_guidance)
-        train_data_loader = DataLoader(dataset=train_dataset ,**config['dataset']['train']['dataloader'])
-        # validation
-        validations = []
-        if 'validations' in config:
-            for validation_config in config['validations']:
-                validation = {}
-                val_img = Image.open(validation_config['image_path'])
-                validation['condition'] = utils.PIL2tensor(val_img)
-                if distortion_guidance:
-                    val_distortion = Image.open(validation_config['distortion_guidance'])
-                    validation['condition'] = torch.cat([validation['condition'], utils.PIL2tensor(val_distortion)], dim=1)
-                validation['filename'] = os.path.basename(validation_config['image_path'])
-                validation['postfix'] = os.path.splitext(validation_config['image_path'])[-1]
-                validation['output_dir'] = validation_config['output_dir']
-                validations.append(validation)
-                utils.mkdir(validation['output_dir'])
-        # run trainer
-        model.fine_tune(data_loader=train_data_loader, validations=validations, **config['tasks']['fine_tune'])
-
-    if 'find_learning_rate' in config['tasks'] and config['tasks']['find_learning_rate']['run'] == True:
-        # training dataset
-        train_dataset = datasets.ColorizationDataset(**config['dataset']['train']['path'], distortion_guidance=distortion_guidance)
-        train_data_loader = DataLoader(dataset=train_dataset ,**config['dataset']['train']['dataloader'])
-        # find lr
-        model.find_lr(data_loader=train_data_loader, **config['tasks']['find_learning_rate'])
+        if global_rank > 0 and distributed:
+            torch.multiprocessing.spawn(main_worker, nprocs=global_rank, args=(global_rank, task_option, config))
+        else:
+            main_worker(global_rank - 1, global_rank, task_option=task_option, config=config)

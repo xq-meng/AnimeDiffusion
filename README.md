@@ -1,4 +1,16 @@
-# AnimeDiffusion: Reference-based Anime Face Line Drawing Colorization via Diffusion Models
+# AnimeDiffusion
+Reference-based Anime Face Line Drawing Colorization via Diffusion Models
+
+Yu Cao<sup>†,1</sup>, Xiangqiao Meng<sup>†,1</sup>, P. Y. Mok<sup>1</sup>, Tong-Yee Lee<sup>2</sup>, Xueting Liu<sup>3</sup>, Ping Li<sup>1</sup>
+
+1 The Hong Kong Polytechnic University, Hong Kong
+
+2 National Cheng Kung University, Taiwan
+
+3 Caritas Institute of Higher Education, Hong Kong
+
+
+[Project Page](https://xq-meng.github.io/projects/AnimeDiffusion.html)
 
 ![avatar](https://xq-meng.github.io/resources/image/AnimeDiffusion/teaser.jpg)
 

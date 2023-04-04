@@ -8,7 +8,9 @@ Yu Cao<sup>†,1</sup>, Xiangqiao Meng<sup>†,1</sup>, P. Y. Mok<sup>1</sup>, T
 3\. Caritas Institute of Higher Education, Hong Kong
 
 
-[Project Page](https://xq-meng.github.io/projects/AnimeDiffusion.html)
+[[Project Page]](https://xq-meng.github.io/projects/AnimeDiffusion.html)
+[[Dataset]](https://forms.gle/rHUsuSfq7RR5fpYNA)
+[[Paper(Coming Soon)]](https://xq-meng.github.io/projects/AnimeDiffusion.html)
 
 ![avatar](https://xq-meng.github.io/resources/image/AnimeDiffusion/teaser.jpg)
 
@@ -25,7 +27,9 @@ opencv-python>=4.6.0.66
 
 ## Dataset
 
-Our training dataset is avaliable at [AnimeDiffusion-Dataset](https://forms.gle/rHUsuSfq7RR5fpYNA).
+We build a new benchmark dataset of colored image of anime faces, which contains 31,696 training data and 579 testing data.
+
+![avatar](https://xq-meng.github.io/resources/image/AnimeDiffusion/dataset_teaser.jpg)
 
 ## Pipeline
 

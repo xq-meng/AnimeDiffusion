@@ -1,5 +1,5 @@
 # AnimeDiffusion
-Reference-based Anime Face Line Drawing Colorization via Diffusion Models
+Expressive Anime Drawing Colorization via Efficient Diffusions
 
 Yu Cao<sup>†,1</sup>, Xiangqiao Meng<sup>†,1</sup>, P. Y. Mok<sup>1</sup>, Tong-Yee Lee<sup>2</sup>, Xueting Liu<sup>3</sup>, Ping Li<sup>1</sup>
 

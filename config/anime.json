@@ -30,15 +30,15 @@
             "logging_step": 10
         },
         "test_anime_diffusion": {
-            "run": false,
+            "run": true,
             "name": "TestAnimeDiffusion",
             "global_rank": 1,
             "model": "anime_diffusion",
-            "datas": "anime_test",
-            "output_dir": "/mnt/data1/output/ADF/out/result/"
+            "datas": "anime_revision",
+            "output_dir": "/mnt/data1/output/ADF/out/result/revision/limitation/"
         },
         "gui_anime_diffusion": {
-            "run": true,
+            "run": false,
             "name": "gui.GUI_ADF",
             "global_rank": 1,
             "distributed": false,
@@ -89,6 +89,18 @@
             "name": "Anime",
             "reference_path": "/mnt/data1/dataset/Anime/test/reconstruction/reference/",
             "condition_path": "/mnt/data1/dataset/Anime/test/reconstruction/condition/",
+            "size": 256,
+            "torch_dtype": "float32",
+            "batch_size": 1,
+            "num_workers": 1,
+            "shuffle": false,
+            "pin_memory": true,
+            "drop_last": true
+        },
+        "anime_revision": {
+            "name": "Anime",
+            "reference_path": "/mnt/data1/dataset/Anime/test/limitation/reference/",
+            "condition_path": "/mnt/data1/dataset/Anime/test/limitation/condition/",
             "size": 256,
             "torch_dtype": "float32",
             "batch_size": 1,

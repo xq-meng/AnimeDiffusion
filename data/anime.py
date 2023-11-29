@@ -13,7 +13,8 @@ class Anime(Dataset):
         reference_path,
         condition_path,
         size=512,
-        torch_dtype='float32'
+        torch_dtype='float32',
+        distored_condition=True,
     ):
         self.reference_path = reference_path
         self.condition_path = condition_path
@@ -35,6 +36,7 @@ class Anime(Dataset):
         self.con_filenames.sort()
         self.size = size
         self.dtype = getattr(torch, torch_dtype)
+        self.distored_condition = distored_condition
 
     def __getitem__(self, index):
         assert self.ref_filenames[index] == self.con_filenames[index]
@@ -42,7 +44,10 @@ class Anime(Dataset):
         ret = {}
         img_reference = Image.open(os.path.join(self.reference_path, self.ref_filenames[index])).convert('RGB')
         img_condition = Image.open(os.path.join(self.condition_path, self.con_filenames[index])).convert('L')
-        img_distorted = warp_image(img_reference)
+        if self.distored_condition:
+            img_distorted = warp_image(img_reference)
+        else:
+            img_distorted = img_reference
 
         ret['reference'] = self.tf_ref(img_reference).to(self.dtype)
         ret['condition'] = self.tf_con(img_condition).to(self.dtype)

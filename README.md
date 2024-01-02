@@ -1,5 +1,5 @@
 # AnimeDiffusion
-Expressive Anime Drawing Colorization via Efficient Diffusions
+AnimeDiffusion: Anime Diffusion Colorization
 
 Yu Cao<sup>†,1</sup>, Xiangqiao Meng<sup>†,1</sup>, P. Y. Mok<sup>1</sup>, Tong-Yee Lee<sup>2</sup>, Xueting Liu<sup>3</sup>, Ping Li<sup>1</sup>
 
@@ -8,11 +8,11 @@ Yu Cao<sup>†,1</sup>, Xiangqiao Meng<sup>†,1</sup>, P. Y. Mok<sup>1</sup>, T
 3\. Caritas Institute of Higher Education, Hong Kong
 
 
-[[Project Page]](https://xq-meng.github.io/projects/AnimeDiffusion.html)
+[[Project Page]](https://xq-meng.github.io/projects/AnimeDiffusion)
 [[Dataset]](https://forms.gle/rHUsuSfq7RR5fpYNA)
-[[Paper(Coming Soon)]](https://xq-meng.github.io/projects/AnimeDiffusion.html)
+[[Paper]](https://iostatic.vrtoce.eu.org/pdfs/anime_diffusion.pdf)
 
-![avatar](https://xq-meng.github.io/resources/image/AnimeDiffusion/teaser.jpg)
+![avatar](https://media.githubusercontent.com/media/xq-meng/xq-meng.github.io/main/projects/AnimeDiffusion/images/teaser.jpg)
 
 ![./LICENSE](https://img.shields.io/bower/l/bootstrap)
 
@@ -29,12 +29,8 @@ opencv-python>=4.6.0.66
 
 We build a new benchmark dataset of colored image of anime faces, which contains 31,696 training data and 579 testing data.
 
-![avatar](https://xq-meng.github.io/resources/image/AnimeDiffusion/dataset_teaser.jpg)
+![avatar](https://media.githubusercontent.com/media/xq-meng/xq-meng.github.io/main/projects/AnimeDiffusion/images/dataset_teaser.jpg)
 
 ## Pipeline
 
-![avatar](https://xq-meng.github.io/resources/image/AnimeDiffusion/framework.png)
-
-## BibTeX
-
-Coming Soon
+![avatar](https://media.githubusercontent.com/media/xq-meng/xq-meng.github.io/main/projects/AnimeDiffusion/images/framework.jpg)

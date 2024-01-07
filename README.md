@@ -10,7 +10,7 @@ Yu Cao<sup>†,1</sup>, Xiangqiao Meng<sup>†,1</sup>, P. Y. Mok<sup>1</sup>, T
 
 [[Project Page]](https://xq-meng.github.io/projects/AnimeDiffusion)
 [[Dataset]](https://forms.gle/rHUsuSfq7RR5fpYNA)
-[[Paper]](https://iostatic.vrtoce.eu.org/pdfs/anime_diffusion.pdf)
+[[Paper]](https://iostatic.vrtoce.eu.org/anime_diffusion/anime_diffusion.pdf)
 
 ![avatar](https://media.githubusercontent.com/media/xq-meng/xq-meng.github.io/main/projects/AnimeDiffusion/images/teaser.jpg)
 
